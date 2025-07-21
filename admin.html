@@ -416,7 +416,7 @@
         
         // Generate QR Code
         function generateQRCode() {
-            const url = window.location.origin + window.location.pathname.replace('admin.html', '');
+            const url = window.location.href.replace('admin.html', '');
             document.getElementById('urlDisplay').textContent = url;
             
             new QRCode(document.getElementById("qrcode"), {
