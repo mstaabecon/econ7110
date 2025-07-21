@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Results - Student Response System</title>
-    
     <style>
         * {
             margin: 0;
@@ -133,6 +132,62 @@
             100% { transform: rotate(360deg); }
         }
         
+        .message-container {
+            text-align: center;
+            padding: 100px 20px;
+        }
+        
+        .waiting-message {
+            background: white;
+            padding: 60px 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .waiting-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+            100% { opacity: 0.6; transform: scale(1); }
+        }
+        
+        .waiting-title {
+            font-size: 28px;
+            color: #51247A;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .waiting-subtitle {
+            font-size: 18px;
+            color: #666;
+            line-height: 1.5;
+        }
+        
+        .loading-dots {
+            display: inline-block;
+        }
+        
+        .loading-dots::after {
+            content: '';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+        
+        @keyframes dots {
+            0% { content: ''; }
+            25% { content: '.'; }
+            50% { content: '..'; }
+            75% { content: '...'; }
+            100% { content: ''; }
+        }
+        
         .no-questions {
             text-align: center;
             padding: 60px 20px;
@@ -150,22 +205,33 @@
         .back-link:hover {
             background-color: rgba(255,255,255,0.1);
         }
+        
+        .student-link {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .student-link:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="header-content">
             <h1>Live Results - Student Response System</h1>
-            <a href="admin.html" class="back-link">← Back to Admin</a>
+            <div>
+                <a href="index.html" class="student-link">← Back to Questions</a>
+            </div>
         </div>
     </div>
     
     <div class="container">
-        <div class="refresh-info">
-            <span class="refresh-icon">⟳</span> Results update automatically
-        </div>
-        <div id="resultsContainer" class="results-grid">
-            <div class="no-questions">Loading results...</div>
+        <div id="mainContent">
+            <!-- Content will be dynamically inserted here -->
         </div>
     </div>
 
@@ -192,7 +258,10 @@
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
         
-        // Store chart instances
+        // Store data
+        let resultsVisible = false;
+        let questionsData = {};
+        let responsesData = {};
         const charts = {};
         
         // Colors for the charts
@@ -203,71 +272,85 @@
             '#bd85d9',
             '#dea6fa'
         ];
-
-        // Visibility settings
-        let resultsVisible = false;
-        let questionsData = {};
-
-        // Listen to visibility setting
-        onValue(ref(database, 'settings/resultsVisible'), (snapshot) => {
-        resultsVisible = snapshot.val() !== false;
-        updateDisplay();
-        });
-
-        // Listen to questions
-        onValue(ref(database, 'questions'), (snapshot) => {
-        questionsData = snapshot.val() || {};
-        updateDisplay();
-        });
-
-        function updateDisplay() {
-        if (!resultsVisible) {
-            showWaitingMessage();
-        } else if (Object.keys(questionsData).length === 0) {
-            showNoQuestionsMessage();
-        } else {
-            showResults();
-        }
-        }
         
-        // Load data
-        function loadResults() {
-            // Listen to both questions and responses
+        // Initialize listeners
+        function initializeListeners() {
+            // Listen to visibility setting
+            const settingsRef = ref(database, 'settings/resultsVisible');
+            onValue(settingsRef, (snapshot) => {
+                resultsVisible = snapshot.val();
+                // Default to false if not set
+                if (resultsVisible === null) {
+                    resultsVisible = false;
+                }
+                updateDisplay();
+            });
+            
+            // Listen to questions
             const questionsRef = ref(database, 'questions');
-            const responsesRef = ref(database, 'responses');
-            
-            let questionsData = {};
-            let responsesData = {};
-            
             onValue(questionsRef, (snapshot) => {
                 questionsData = snapshot.val() || {};
-                updateDisplay(questionsData, responsesData);
+                updateDisplay();
             });
             
+            // Listen to responses
+            const responsesRef = ref(database, 'responses');
             onValue(responsesRef, (snapshot) => {
                 responsesData = snapshot.val() || {};
-                updateDisplay(questionsData, responsesData);
+                updateDisplay();
             });
         }
         
-        // Update display
-        function updateDisplay(questions, responses) {
-            const container = document.getElementById('resultsContainer');
+        // Update display based on state
+        function updateDisplay() {
+            const mainContent = document.getElementById('mainContent');
             
-            // Get active questions only
-            const activeQuestions = Object.entries(questions)
+            // Get active questions
+            const activeQuestions = Object.entries(questionsData)
                 .filter(([id, q]) => q.active)
                 .map(([id, q]) => ({ id, ...q }));
             
-            if (activeQuestions.length === 0) {
-                container.innerHTML = '<div class="no-questions">No active questions. Please activate questions in the admin panel.</div>';
-                return;
+            if (!resultsVisible) {
+                // Show waiting message
+                mainContent.innerHTML = `
+                    <div class="message-container">
+                        <div class="waiting-message">
+                            <div class="waiting-icon">🕐</div>
+                            <h2 class="waiting-title">Waiting for instructor<span class="loading-dots"></span></h2>
+                            <p class="waiting-subtitle">The instructor will display results shortly.<br>Please stay on this page.</p>
+                        </div>
+                    </div>
+                `;
+            } else if (activeQuestions.length === 0) {
+                // Show no questions message
+                mainContent.innerHTML = `
+                    <div class="message-container">
+                        <div class="waiting-message">
+                            <div class="waiting-icon">📋</div>
+                            <h2 class="waiting-title">No active questions</h2>
+                            <p class="waiting-subtitle">Please wait for the instructor to activate questions.</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Show results
+                displayResults(activeQuestions);
             }
+        }
+        
+        // Display results
+        function displayResults(activeQuestions) {
+            const mainContent = document.getElementById('mainContent');
             
-            container.innerHTML = '';
+            let html = `
+                <div class="refresh-info">
+                    <span class="refresh-icon">⟳</span> Results update automatically
+                </div>
+                <div class="results-grid">
+            `;
             
             activeQuestions.forEach((question, index) => {
-                const questionResponses = responses[question.id] || {};
+                const questionResponses = responsesData[question.id] || {};
                 const responseCount = Object.keys(questionResponses).length;
                 
                 // Count responses for each answer
@@ -278,41 +361,50 @@
                     }
                 });
                 
-                // Create result card
-                const card = document.createElement('div');
-                card.className = 'result-card';
-                card.innerHTML = `
-                    <h3>Question ${index + 1}: ${question.text}</h3>
-                    <div class="chart-container">
-                        <canvas id="chart-${question.id}"></canvas>
-                    </div>
-                    <div class="answer-stats">
-                        ${question.answers.map((answer, idx) => {
-                            const count = answerCounts[idx];
-                            const percent = responseCount > 0 ? Math.round((count / responseCount) * 100) : 0;
-                            const barWidth = responseCount > 0 ? (count / responseCount) * 100 : 0;
-                            
-                            return `
-                                <div class="answer-stat">
-                                    <div class="answer-label">${String.fromCharCode(65 + idx)}. ${answer}</div>
-                                    <div class="answer-count">
-                                        <div class="answer-bar" style="width: ${barWidth}px;"></div>
-                                        <span class="answer-percent">${count} (${percent}%)</span>
+                html += `
+                    <div class="result-card">
+                        <h3>Question ${index + 1}: ${question.text}</h3>
+                        <div class="chart-container">
+                            <canvas id="chart-${question.id}"></canvas>
+                        </div>
+                        <div class="answer-stats">
+                            ${question.answers.map((answer, idx) => {
+                                const count = answerCounts[idx];
+                                const percent = responseCount > 0 ? Math.round((count / responseCount) * 100) : 0;
+                                const barWidth = responseCount > 0 ? (count / responseCount) * 100 : 0;
+                                
+                                return `
+                                    <div class="answer-stat">
+                                        <div class="answer-label">${String.fromCharCode(65 + idx)}. ${answer}</div>
+                                        <div class="answer-count">
+                                            <div class="answer-bar" style="width: ${barWidth}px;"></div>
+                                            <span class="answer-percent">${count} (${percent}%)</span>
+                                        </div>
                                     </div>
-                                </div>
-                            `;
-                        }).join('')}
+                                `;
+                            }).join('')}
+                        </div>
+                        <div class="total-responses">Total responses: ${responseCount}</div>
                     </div>
-                    <div class="total-responses">Total responses: ${responseCount}</div>
                 `;
-                
-                container.appendChild(card);
-                
-                // Create or update chart
-                setTimeout(() => {
-                    createChart(question.id, question.answers, answerCounts);
-                }, 100);
             });
+            
+            html += '</div>';
+            mainContent.innerHTML = html;
+            
+            // Create charts after DOM is updated
+            setTimeout(() => {
+                activeQuestions.forEach((question) => {
+                    const questionResponses = responsesData[question.id] || {};
+                    const answerCounts = new Array(question.answers.length).fill(0);
+                    Object.values(questionResponses).forEach(answerIndex => {
+                        if (answerIndex >= 0 && answerIndex < answerCounts.length) {
+                            answerCounts[answerIndex]++;
+                        }
+                    });
+                    createChart(question.id, question.answers, answerCounts);
+                });
+            }, 100);
         }
         
         // Create chart
@@ -386,8 +478,8 @@
             });
         }
         
-        // Initialize
-        loadResults();
+        // Initialize the app
+        initializeListeners();
     </script>
 </body>
 </html>
