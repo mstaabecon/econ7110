@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Results - Student Response System</title>
+    
     <style>
         * {
             margin: 0;
@@ -202,6 +203,32 @@
             '#bd85d9',
             '#dea6fa'
         ];
+
+        // Visibility settings
+        let resultsVisible = false;
+        let questionsData = {};
+
+        // Listen to visibility setting
+        onValue(ref(database, 'settings/resultsVisible'), (snapshot) => {
+        resultsVisible = snapshot.val() !== false;
+        updateDisplay();
+        });
+
+        // Listen to questions
+        onValue(ref(database, 'questions'), (snapshot) => {
+        questionsData = snapshot.val() || {};
+        updateDisplay();
+        });
+
+        function updateDisplay() {
+        if (!resultsVisible) {
+            showWaitingMessage();
+        } else if (Object.keys(questionsData).length === 0) {
+            showNoQuestionsMessage();
+        } else {
+            showResults();
+        }
+        }
         
         // Load data
         function loadResults() {

@@ -246,10 +246,10 @@
                     messageDiv.innerHTML = '<div class="success-message">Thank you! Your responses have been submitted.</div>';
                     submitBtn.textContent = 'Submitted';
                     
-                    // Clear selections after a delay
+                    //Forward to result after submission
                     setTimeout(() => {
-                        window.location.reload();
-                    }, 3000);
+                    window.location.href = 'results.html';
+                    }, 2000);
                 })
                 .catch(error => {
                     console.error('Error submitting:', error);
