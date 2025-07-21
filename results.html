@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results - Student Response System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background-color: #f5f5f5;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background-color: #51247A;
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+        
+        .result-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .result-card h3 {
+            color: #51247A;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 15px;
+        }
+        
+        .answer-stats {
+            margin-top: 15px;
+        }
+        
+        .answer-stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .answer-stat:last-child {
+            border-bottom: none;
+        }
+        
+        .answer-label {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .answer-count {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .answer-bar {
+            height: 20px;
+            background-color: #51247A;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        
+        .answer-percent {
+            font-weight: 600;
+            color: #51247A;
+        }
+        
+        .total-responses {
+            text-align: center;
+            color: #666;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        .no-responses {
+            text-align: center;
+            color: #999;
+            padding: 40px 0;
+        }
+        
+        .refresh-info {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .refresh-icon {
+            display: inline-block;
+            margin-left: 5px;
+            animation: spin 2s linear infinite;
+        }
+        
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+        
+        .no-questions {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        
+        .back-link {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .back-link:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>Live Results - Student Response System</h1>
+            <a href="admin.html" class="back-link">← Back to Admin</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="refresh-info">
+            <span class="refresh-icon">⟳</span> Results update automatically
+        </div>
+        <div id="resultsContainer" class="results-grid">
+            <div class="no-questions">Loading results...</div>
+        </div>
+    </div>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        
+        // Firebase configuration - REPLACE WITH YOUR CONFIG
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            databaseURL: "YOUR_DATABASE_URL",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        
+        // Store chart instances
+        const charts = {};
+        
+        // Colors for the charts
+        const chartColors = [
+            '#51247A',
+            '#7b4397',
+            '#9c64b8',
+            '#bd85d9',
+            '#dea6fa'
+        ];
+        
+        // Load data
+        function loadResults() {
+            // Listen to both questions and responses
+            const questionsRef = ref(database, 'questions');
+            const responsesRef = ref(database, 'responses');
+            
+            let questionsData = {};
+            let responsesData = {};
+            
+            onValue(questionsRef, (snapshot) => {
+                questionsData = snapshot.val() || {};
+                updateDisplay(questionsData, responsesData);
+            });
+            
+            onValue(responsesRef, (snapshot) => {
+                responsesData = snapshot.val() || {};
+                updateDisplay(questionsData, responsesData);
+            });
+        }
+        
+        // Update display
+        function updateDisplay(questions, responses) {
+            const container = document.getElementById('resultsContainer');
+            
+            // Get active questions only
+            const activeQuestions = Object.entries(questions)
+                .filter(([id, q]) => q.active)
+                .map(([id, q]) => ({ id, ...q }));
+            
+            if (activeQuestions.length === 0) {
+                container.innerHTML = '<div class="no-questions">No active questions. Please activate questions in the admin panel.</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            activeQuestions.forEach((question, index) => {
+                const questionResponses = responses[question.id] || {};
+                const responseCount = Object.keys(questionResponses).length;
+                
+                // Count responses for each answer
+                const answerCounts = new Array(question.answers.length).fill(0);
+                Object.values(questionResponses).forEach(answerIndex => {
+                    if (answerIndex >= 0 && answerIndex < answerCounts.length) {
+                        answerCounts[answerIndex]++;
+                    }
+                });
+                
+                // Create result card
+                const card = document.createElement('div');
+                card.className = 'result-card';
+                card.innerHTML = `
+                    <h3>Question ${index + 1}: ${question.text}</h3>
+                    <div class="chart-container">
+                        <canvas id="chart-${question.id}"></canvas>
+                    </div>
+                    <div class="answer-stats">
+                        ${question.answers.map((answer, idx) => {
+                            const count = answerCounts[idx];
+                            const percent = responseCount > 0 ? Math.round((count / responseCount) * 100) : 0;
+                            const barWidth = responseCount > 0 ? (count / responseCount) * 100 : 0;
+                            
+                            return `
+                                <div class="answer-stat">
+                                    <div class="answer-label">${String.fromCharCode(65 + idx)}. ${answer}</div>
+                                    <div class="answer-count">
+                                        <div class="answer-bar" style="width: ${barWidth}px;"></div>
+                                        <span class="answer-percent">${count} (${percent}%)</span>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                    <div class="total-responses">Total responses: ${responseCount}</div>
+                `;
+                
+                container.appendChild(card);
+                
+                // Create or update chart
+                setTimeout(() => {
+                    createChart(question.id, question.answers, answerCounts);
+                }, 100);
+            });
+        }
+        
+        // Create chart
+        function createChart(questionId, labels, data) {
+            const ctx = document.getElementById(`chart-${questionId}`);
+            if (!ctx) return;
+            
+            // Destroy existing chart if any
+            if (charts[questionId]) {
+                charts[questionId].destroy();
+            }
+            
+            // Create labels with letters
+            const chartLabels = labels.map((label, idx) => 
+                `${String.fromCharCode(65 + idx)}. ${label.substring(0, 30)}${label.length > 30 ? '...' : ''}`
+            );
+            
+            charts[questionId] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        label: 'Responses',
+                        data: data,
+                        backgroundColor: chartColors,
+                        borderColor: chartColors.map(c => c + 'dd'),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const value = context.parsed.y;
+                                    const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                    return `${value} responses (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                precision: 0
+                            },
+                            grid: {
+                                color: '#f0f0f0'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                autoSkip: false,
+                                maxRotation: 45,
+                                minRotation: 0
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Initialize
+        loadResults();
+    </script>
+</body>
+</html>
