@@ -64,23 +64,7 @@
             background-color: #f0f0f0;
         }
         
-        .leaderboard-opt {
-            margin-left: 20px;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .leaderboard-opt input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            cursor: pointer;
-        }
-        
-        .leaderboard-opt label {
-            cursor: pointer;
-            user-select: none;
-        }
+
         
         .container {
             max-width: 600px;
@@ -506,23 +490,7 @@
             });
         }
         
-        // Update leaderboard checkbox
-        function updateLeaderboardCheckbox() {
-            document.getElementById('showOnLeaderboard').checked = showOnLeaderboard;
-            updatePrivacyNote();
-        }
         
-        // Update privacy note
-        function updatePrivacyNote() {
-            const note = document.getElementById('privacyNote');
-            if (showOnLeaderboard && !isAnonymous) {
-                note.textContent = 'Visible on leaderboard';
-                note.style.color = '#51247A';
-            } else {
-                note.textContent = 'Your score is private';
-                note.style.color = '#999';
-            }
-        }
         
         // Load current score
         function loadCurrentScore() {
