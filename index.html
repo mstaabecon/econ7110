@@ -504,12 +504,7 @@
                 total: totalAnswered,
                 lastUpdated: Date.now()
             });
-        }visibility = function() {
-            showOnLeaderboard = document.getElementById('showOnLeaderboard').checked;
-            localStorage.setItem('showOnLeaderboard', showOnLeaderboard);
-            updatePrivacyNote();
-            updateScoreInDatabase();
-        };
+        }
         
         // Update leaderboard checkbox
         function updateLeaderboardCheckbox() {
