@@ -38,6 +38,41 @@
             padding: 20px;
         }
         
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .tab:hover {
+            color: #51247A;
+        }
+        
+        .tab.active {
+            color: #51247A;
+            border-bottom-color: #51247A;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
         .results-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
@@ -107,6 +142,82 @@
             color: #666;
             margin-top: 10px;
             font-size: 14px;
+        }
+        
+        .leaderboard-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .leaderboard-title {
+            text-align: center;
+            color: #51247A;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            background: #f8f8f8;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        .leaderboard-item:hover {
+            background: #f0f0f0;
+            transform: translateX(5px);
+        }
+        
+        .leaderboard-item.top-3 {
+            background: linear-gradient(to right, #f8f6fb, #f8f8f8);
+            border-left: 4px solid #51247A;
+        }
+        
+        .leaderboard-rank {
+            font-size: 24px;
+            font-weight: bold;
+            color: #51247A;
+            width: 50px;
+        }
+        
+        .leaderboard-rank.gold {
+            color: #FFD700;
+        }
+        
+        .leaderboard-rank.silver {
+            color: #C0C0C0;
+        }
+        
+        .leaderboard-rank.bronze {
+            color: #CD7F32;
+        }
+        
+        .leaderboard-name {
+            flex: 1;
+            font-size: 18px;
+            color: #333;
+        }
+        
+        .leaderboard-stats {
+            text-align: right;
+        }
+        
+        .leaderboard-points {
+            font-size: 20px;
+            font-weight: bold;
+            color: #51247A;
+        }
+        
+        .leaderboard-accuracy {
+            font-size: 14px;
+            color: #666;
         }
         
         .no-responses {
@@ -217,6 +328,25 @@
         .student-link:hover {
             background-color: rgba(255,255,255,0.1);
         }
+        
+        .your-position {
+            background: #51247A;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .your-position h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .your-position .stats {
+            font-size: 24px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -241,7 +371,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js';
-        import { getDatabase, ref, onValue, push, set } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js';
+        import { getDatabase, ref, onValue } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js';
         
         // Firebase configuration
         const firebaseConfig = {
@@ -260,9 +390,14 @@
         
         // Store data
         let resultsVisible = false;
+        let leaderboardVisible = false;
         let questionsData = {};
         let responsesData = {};
+        let scoresData = {};
         const charts = {};
+        
+        // Get current session ID
+        const sessionId = localStorage.getItem('sessionId');
         
         // Colors for the charts
         const chartColors = [
@@ -275,13 +410,21 @@
         
         // Initialize listeners
         function initializeListeners() {
-            // Listen to visibility setting
-            const settingsRef = ref(database, 'settings/resultsVisible');
-            onValue(settingsRef, (snapshot) => {
+            // Listen to visibility settings
+            const resultsRef = ref(database, 'settings/resultsVisible');
+            onValue(resultsRef, (snapshot) => {
                 resultsVisible = snapshot.val();
-                // Default to false if not set
                 if (resultsVisible === null) {
                     resultsVisible = false;
+                }
+                updateDisplay();
+            });
+            
+            const leaderboardRef = ref(database, 'settings/leaderboardVisible');
+            onValue(leaderboardRef, (snapshot) => {
+                leaderboardVisible = snapshot.val();
+                if (leaderboardVisible === null) {
+                    leaderboardVisible = false;
                 }
                 updateDisplay();
             });
@@ -299,6 +442,13 @@
                 responsesData = snapshot.val() || {};
                 updateDisplay();
             });
+            
+            // Listen to scores
+            const scoresRef = ref(database, 'currentSession/scores');
+            onValue(scoresRef, (snapshot) => {
+                scoresData = snapshot.val() || {};
+                updateDisplay();
+            });
         }
         
         // Update display based on state
@@ -310,17 +460,18 @@
                 .filter(([id, q]) => q.active)
                 .map(([id, q]) => ({ id, ...q }));
             
-            if (!resultsVisible) {
+            if (!resultsVisible && !leaderboardVisible) {
                 // Show waiting message
                 mainContent.innerHTML = `
                     <div class="message-container">
                         <div class="waiting-message">
+                            <div class="waiting-icon">🕐</div>
                             <h2 class="waiting-title">Waiting for instructor<span class="loading-dots"></span></h2>
                             <p class="waiting-subtitle">The instructor will display results shortly.<br>Please stay on this page.</p>
                         </div>
                     </div>
                 `;
-            } else if (activeQuestions.length === 0) {
+            } else if (activeQuestions.length === 0 && resultsVisible) {
                 // Show no questions message
                 mainContent.innerHTML = `
                     <div class="message-container">
@@ -332,15 +483,56 @@
                     </div>
                 `;
             } else {
-                // Show results
-                displayResults(activeQuestions);
+                // Show tabs if both are visible, otherwise show only the visible content
+                let html = '';
+                
+                if (resultsVisible && leaderboardVisible) {
+                    html += `
+                        <div class="tabs">
+                            <button class="tab active" onclick="showTab('results')">Results</button>
+                            <button class="tab" onclick="showTab('leaderboard')">Leaderboard</button>
+                        </div>
+                    `;
+                }
+                
+                html += '<div id="tabContent">';
+                
+                if (resultsVisible) {
+                    html += `<div id="resultsTab" class="tab-content ${!leaderboardVisible ? 'active' : 'active'}">`;
+                    html += getResultsHTML(activeQuestions);
+                    html += '</div>';
+                }
+                
+                if (leaderboardVisible) {
+                    html += `<div id="leaderboardTab" class="tab-content ${!resultsVisible ? 'active' : ''}">`;
+                    html += getLeaderboardHTML();
+                    html += '</div>';
+                }
+                
+                html += '</div>';
+                
+                mainContent.innerHTML = html;
+                
+                // Create charts after DOM is updated (if results are visible)
+                if (resultsVisible) {
+                    setTimeout(() => {
+                        activeQuestions.forEach((question) => {
+                            const questionResponses = responsesData[question.id] || {};
+                            const answerCounts = new Array(question.answers.length).fill(0);
+                            Object.values(questionResponses).forEach(answerIndex => {
+                                if (answerIndex >= 0 && answerIndex < answerCounts.length) {
+                                    answerCounts[answerIndex]++;
+                                }
+                            });
+                            createChart(question.id, question.answers, answerCounts);
+                        });
+                    }, 100);
+                }
             }
         }
         
-        // Display results
-        function displayResults(activeQuestions) {
-            const mainContent = document.getElementById('mainContent');
-            
+        // Get results HTML
+        function getResultsHTML(activeQuestions) {
             let html = `
                 <div class="refresh-info">
                     <span class="refresh-icon">⟳</span> Results update automatically
@@ -389,22 +581,99 @@
             });
             
             html += '</div>';
-            mainContent.innerHTML = html;
-            
-            // Create charts after DOM is updated
-            setTimeout(() => {
-                activeQuestions.forEach((question) => {
-                    const questionResponses = responsesData[question.id] || {};
-                    const answerCounts = new Array(question.answers.length).fill(0);
-                    Object.values(questionResponses).forEach(answerIndex => {
-                        if (answerIndex >= 0 && answerIndex < answerCounts.length) {
-                            answerCounts[answerIndex]++;
-                        }
-                    });
-                    createChart(question.id, question.answers, answerCounts);
-                });
-            }, 100);
+            return html;
         }
+        
+        // Get leaderboard HTML
+        function getLeaderboardHTML() {
+            // Show all non-anonymous scores
+            const visibleScores = Object.entries(scoresData)
+                .map(([id, data]) => ({ id, ...data }))
+                .filter(score => score.nickname !== 'Anonymous')
+                .sort((a, b) => b.points - a.points);
+            
+            // Get current user's score
+            const currentUserScore = scoresData[sessionId];
+            
+            let html = '<div class="leaderboard-container">';
+            html += '<h2 class="leaderboard-title">🏆 Leaderboard</h2>';
+            
+            // Show current user's position if they have a score
+            if (currentUserScore) {
+                const allScores = Object.entries(scoresData)
+                    .map(([id, data]) => ({ id, ...data }))
+                    .sort((a, b) => b.points - a.points);
+                const position = allScores.findIndex(s => s.id === sessionId) + 1;
+                
+                html += `
+                    <div class="your-position">
+                        <h3>Your Position</h3>
+                        <div class="stats">#${position} - ${currentUserScore.points} points (${currentUserScore.correct}/${currentUserScore.total} correct)</div>
+                        ${currentUserScore.nickname === 'Anonymous' ? '<div style="font-size: 14px; margin-top: 5px;">You are playing anonymously</div>' : ''}
+                    </div>
+                `;
+            }
+            
+            if (visibleScores.length === 0) {
+                html += '<div class="no-responses">No named players yet.<br>Anonymous players are not shown on the leaderboard.</div>';
+            } else {
+                // Show top 10 non-anonymous players
+                visibleScores.slice(0, 10).forEach((score, index) => {
+                    const rank = index + 1;
+                    const isCurrentUser = score.id === sessionId;
+                    const accuracy = score.total > 0 ? Math.round((score.correct / score.total) * 100) : 0;
+                    
+                    let rankClass = '';
+                    if (rank === 1) rankClass = 'gold';
+                    else if (rank === 2) rankClass = 'silver';
+                    else if (rank === 3) rankClass = 'bronze';
+                    
+                    html += `
+                        <div class="leaderboard-item ${rank <= 3 ? 'top-3' : ''}" ${isCurrentUser ? 'style="background: #e8e0f0;"' : ''}>
+                            <div class="leaderboard-rank ${rankClass}">${rank}</div>
+                            <div class="leaderboard-name">${score.nickname}${isCurrentUser ? ' (You)' : ''}</div>
+                            <div class="leaderboard-stats">
+                                <div class="leaderboard-points">${score.points} pts</div>
+                                <div class="leaderboard-accuracy">${score.correct}/${score.total} (${accuracy}%)</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                // Count anonymous players
+                const anonymousCount = Object.values(scoresData).filter(s => s.nickname === 'Anonymous').length;
+                if (anonymousCount > 0) {
+                    html += `
+                        <div style="text-align: center; margin-top: 20px; color: #666; font-size: 14px;">
+                            Plus ${anonymousCount} anonymous ${anonymousCount === 1 ? 'player' : 'players'}
+                        </div>
+                    `;
+                }
+            }
+            
+            html += '</div>';
+            return html;
+        }
+        
+        // Show tab
+        window.showTab = function(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            if (tabName === 'results') {
+                document.getElementById('resultsTab').classList.add('active');
+            } else if (tabName === 'leaderboard') {
+                document.getElementById('leaderboardTab').classList.add('active');
+            }
+        };
         
         // Create chart
         function createChart(questionId, labels, data) {

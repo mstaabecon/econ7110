@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Response System - UQ</title>
+    <title>Student Response System</title>
     <style>
         * {
             margin: 0;
@@ -27,11 +27,94 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
+        .nickname-bar {
+            background-color: #3d1b5c;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .nickname-display {
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .nickname-text {
+            font-size: 16px;
+        }
+        
+        .nickname-buttons {
+            display: inline-flex;
+            gap: 5px;
+        }
+        
+        .nickname-bar button {
+            padding: 4px 12px;
+            border: none;
+            border-radius: 4px;
+            background-color: white;
+            color: #51247A;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .nickname-bar button:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .leaderboard-opt {
+            margin-left: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .leaderboard-opt input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        
+        .leaderboard-opt label {
+            cursor: pointer;
+            user-select: none;
+        }
+        
         .container {
             max-width: 600px;
             margin: 0 auto;
             padding: 20px;
             flex: 1;
+        }
+        
+        .score-display {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .score-display .points {
+            font-size: 24px;
+            font-weight: bold;
+            color: #51247A;
+        }
+        
+        .score-display .accuracy {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .score-display .privacy-note {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+            font-style: italic;
         }
         
         .question-card {
@@ -42,11 +125,26 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
         .question-title {
             font-size: 18px;
             font-weight: 600;
             color: #333;
-            margin-bottom: 15px;
+        }
+        
+        .point-value {
+            background-color: #51247A;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
         }
         
         .answer-option {
@@ -63,7 +161,7 @@
             text-align: left;
         }
         
-        .answer-option:hover {
+        .answer-option:hover:not(.disabled) {
             border-color: #51247A;
             background-color: #f8f6fb;
         }
@@ -72,6 +170,29 @@
             background-color: #51247A;
             color: white;
             border-color: #51247A;
+        }
+        
+        .answer-option.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .answer-option.correct {
+            background-color: #d4f4dd;
+            border-color: #2e7d32;
+            color: #2e7d32;
+        }
+        
+        .answer-option.incorrect {
+            background-color: #ffebee;
+            border-color: #d32f2f;
+            color: #d32f2f;
+        }
+        
+        .answer-option.missed-correct {
+            background-color: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
         }
         
         .submit-btn {
@@ -103,13 +224,22 @@
             color: #666;
         }
         
-        .success-message {
-            background-color: #d4f4dd;
-            color: #2e7d32;
+        .feedback-message {
             padding: 15px;
             border-radius: 6px;
             text-align: center;
             margin: 20px 0;
+            font-weight: 500;
+        }
+        
+        .feedback-message.correct {
+            background-color: #d4f4dd;
+            color: #2e7d32;
+        }
+        
+        .feedback-message.incorrect {
+            background-color: #ffebee;
+            color: #d32f2f;
         }
         
         .loading {
@@ -117,24 +247,136 @@
             padding: 40px;
             color: #666;
         }
+        
+        .welcome-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .welcome-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .welcome-content h2 {
+            color: #51247A;
+            margin-bottom: 20px;
+        }
+        
+        .assigned-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #51247A;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f6fb;
+            border-radius: 8px;
+        }
+        
+        .welcome-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .welcome-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+        
+        .btn-accept {
+            background-color: #51247A;
+            color: white;
+        }
+        
+        .btn-accept:hover {
+            background-color: #3d1b5c;
+        }
+        
+        .btn-new {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+        
+        .btn-new:hover {
+            background-color: #d0d0d0;
+        }
+        
+        .btn-new:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>Student Response System</h1>
-        <p>University of Queensland</p>
+    </div>
+    
+    <div class="nickname-bar">
+        <div class="nickname-display">
+            <span class="nickname-text">
+                Playing as: <strong id="currentNickname">Loading...</strong>
+            </span>
+            <div class="nickname-buttons">
+                <button onclick="goAnonymous()">Go Anonymous</button>
+            </div>
+        </div>
     </div>
     
     <div class="container">
+        <div id="scoreDisplay" class="score-display" style="display: none;">
+            <div class="points">0 points</div>
+            <div class="accuracy">0/0 correct</div>
+        </div>
+        
         <div id="content">
             <div class="loading">Loading questions...</div>
+        </div>
+    </div>
+    
+    <!-- Welcome Modal -->
+    <div id="welcomeModal" class="welcome-modal hidden">
+        <div class="welcome-content">
+            <h2>Welcome to the Quiz!</h2>
+            <p>Your randomly assigned name is:</p>
+            <div class="assigned-name" id="assignedName"></div>
+            <div class="welcome-buttons">
+                <button class="btn-accept" onclick="acceptName()">Use This Name</button>
+                <button class="btn-new" id="newNameBtn" onclick="generateNewName()">Try Another</button>
+                <button class="btn-new" onclick="goAnonymousFromWelcome()">Go Anonymous</button>
+            </div>
+            <p style="margin-top: 15px; font-size: 14px; color: #666;">
+                You can change your privacy settings anytime
+            </p>
         </div>
     </div>
 
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js';
-        import { getDatabase, ref, onValue, push, set } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js';
+        import { getDatabase, ref, onValue, push, set, get } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js';
         
         // Firebase configuration
         const firebaseConfig = {
@@ -151,11 +393,179 @@
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
         
-        // Generate unique session ID for this student
-        const sessionId = 'student_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        // Random name components
+        const adjectives = [
+            'Clever', 'Bright', 'Swift', 'Wise', 'Happy', 'Lucky', 'Brave', 'Cool',
+            'Smart', 'Quick', 'Keen', 'Sharp', 'Witty', 'Bold', 'Calm', 'Eager'
+        ];
         
-        // Store selected answers
+        const animals = [
+            'Panda', 'Eagle', 'Dolphin', 'Owl', 'Tiger', 'Lion', 'Penguin', 'Koala',
+            'Falcon', 'Wolf', 'Fox', 'Bear', 'Hawk', 'Otter', 'Seal', 'Lynx'
+        ];
+        
+        // Session management
+        let sessionId = localStorage.getItem('sessionId');
+        let nickname = localStorage.getItem('nickname');
+        let isAnonymous = localStorage.getItem('isAnonymous') === 'true';
+        let hasGeneratedNewName = localStorage.getItem('hasGeneratedNewName') === 'true';
+        
+        // If no session ID, generate one
+        if (!sessionId) {
+            sessionId = 'student_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('sessionId', sessionId);
+        }
+        
+        // Store selected answers and submission status
         const selectedAnswers = {};
+        const submittedQuestions = new Set();
+        let currentScore = 0;
+        let correctCount = 0;
+        let totalAnswered = 0;
+        
+        // Generate random name
+        function generateRandomName() {
+            const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+            const animal = animals[Math.floor(Math.random() * animals.length)];
+            const number = Math.floor(Math.random() * 100);
+            return `${adj}${animal}${number}`;
+        }
+        
+        // Initialize nickname
+        function initializeNickname() {
+            if (!nickname && !isAnonymous) {
+                // First time user - show welcome modal
+                const randomName = generateRandomName();
+                document.getElementById('assignedName').textContent = randomName;
+                document.getElementById('welcomeModal').classList.remove('hidden');
+            } else {
+                // Returning user
+                updateNicknameDisplay();
+            }
+        }
+        
+        // Accept the assigned name
+        window.acceptName = function() {
+            nickname = document.getElementById('assignedName').textContent;
+            isAnonymous = false;
+            localStorage.setItem('nickname', nickname);
+            localStorage.setItem('isAnonymous', 'false');
+            document.getElementById('welcomeModal').classList.add('hidden');
+            updateNicknameDisplay();
+            updateScoreInDatabase();
+        };
+        
+        // Generate new name (only once)
+        window.generateNewName = function() {
+            if (!hasGeneratedNewName) {
+                const newName = generateRandomName();
+                document.getElementById('assignedName').textContent = newName;
+                hasGeneratedNewName = true;
+                localStorage.setItem('hasGeneratedNewName', 'true');
+                document.getElementById('newNameBtn').disabled = true;
+                document.getElementById('newNameBtn').textContent = 'Try Another (used)';
+            }
+        };
+        
+        // Go anonymous from welcome
+        window.goAnonymousFromWelcome = function() {
+            isAnonymous = true;
+            nickname = 'Anonymous';
+            localStorage.setItem('isAnonymous', 'true');
+            document.getElementById('welcomeModal').classList.add('hidden');
+            updateNicknameDisplay();
+            updateScoreInDatabase();
+        };
+        
+        // Go anonymous
+        window.goAnonymous = function() {
+            isAnonymous = true;
+            localStorage.setItem('isAnonymous', 'true');
+            updateNicknameDisplay();
+            updateScoreInDatabase();
+        };
+        
+        // Update nickname display
+        function updateNicknameDisplay() {
+            if (isAnonymous) {
+                document.getElementById('currentNickname').textContent = 'Anonymous';
+            } else {
+                document.getElementById('currentNickname').textContent = nickname || 'Unknown';
+            }
+        }
+        
+        // Update score in database
+        function updateScoreInDatabase() {
+            const scoreRef = ref(database, `currentSession/scores/${sessionId}`);
+            set(scoreRef, {
+                nickname: isAnonymous ? 'Anonymous' : nickname,
+                points: currentScore,
+                correct: correctCount,
+                total: totalAnswered,
+                lastUpdated: Date.now()
+            });
+        }ibility = function() {
+            showOnLeaderboard = document.getElementById('showOnLeaderboard').checked;
+            localStorage.setItem('showOnLeaderboard', showOnLeaderboard);
+            updatePrivacyNote();
+            updateScoreInDatabase();
+        };
+        
+        // Update leaderboard checkbox
+        function updateLeaderboardCheckbox() {
+            document.getElementById('showOnLeaderboard').checked = showOnLeaderboard;
+            updatePrivacyNote();
+        }
+        
+        // Update privacy note
+        function updatePrivacyNote() {
+            const note = document.getElementById('privacyNote');
+            if (showOnLeaderboard && !isAnonymous) {
+                note.textContent = 'Visible on leaderboard';
+                note.style.color = '#51247A';
+            } else {
+                note.textContent = 'Your score is private';
+                note.style.color = '#999';
+            }
+        }
+        
+        // Load current score
+        function loadCurrentScore() {
+            const scoreRef = ref(database, `currentSession/scores/${sessionId}`);
+            get(scoreRef).then((snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    currentScore = data.points || 0;
+                    correctCount = data.correct || 0;
+                    totalAnswered = data.total || 0;
+                    updateScoreDisplay();
+                }
+            });
+        }
+        
+        // Update score display
+        function updateScoreDisplay() {
+            const scoreDiv = document.getElementById('scoreDisplay');
+            if (totalAnswered > 0) {
+                scoreDiv.style.display = 'block';
+                scoreDiv.querySelector('.points').textContent = `${currentScore} points`;
+                scoreDiv.querySelector('.accuracy').textContent = `${correctCount}/${totalAnswered} correct`;
+                updatePrivacyNote();
+            }
+        }
+        
+        // Load previously submitted answers
+        function loadSubmittedAnswers() {
+            const responsesRef = ref(database, 'responses');
+            get(responsesRef).then((snapshot) => {
+                const responses = snapshot.val() || {};
+                Object.entries(responses).forEach(([questionId, questionResponses]) => {
+                    if (questionResponses[sessionId] !== undefined) {
+                        submittedQuestions.add(questionId);
+                    }
+                });
+            });
+        }
         
         // Load active questions
         function loadQuestions() {
@@ -186,22 +596,55 @@
             
             let html = '';
             activeQuestions.forEach((question, index) => {
+                const isSubmitted = submittedQuestions.has(question.id);
+                const points = question.points || 1;
+                
                 html += `
                     <div class="question-card">
-                        <div class="question-title">Question ${index + 1}: ${question.text}</div>
-                        ${question.answers.map((answer, answerIndex) => `
-                            <button class="answer-option" 
-                                    data-question="${question.id}" 
-                                    data-answer="${answerIndex}"
-                                    onclick="selectAnswer('${question.id}', ${answerIndex})">
-                                ${String.fromCharCode(65 + answerIndex)}. ${answer}
-                            </button>
-                        `).join('')}
+                        <div class="question-header">
+                            <div class="question-title">Question ${index + 1}: ${question.text}</div>
+                            <div class="point-value">${points} ${points === 1 ? 'point' : 'points'}</div>
+                        </div>
+                        ${question.answers.map((answer, answerIndex) => {
+                            let classes = 'answer-option';
+                            if (isSubmitted) {
+                                classes += ' disabled';
+                                const submittedAnswer = selectedAnswers[question.id];
+                                const correctAnswer = question.correctAnswer;
+                                
+                                if (correctAnswer !== undefined) {
+                                    if (answerIndex === correctAnswer && answerIndex === submittedAnswer) {
+                                        classes += ' correct';
+                                    } else if (answerIndex === submittedAnswer && answerIndex !== correctAnswer) {
+                                        classes += ' incorrect';
+                                    } else if (answerIndex === correctAnswer) {
+                                        classes += ' missed-correct';
+                                    }
+                                }
+                            } else if (selectedAnswers[question.id] === answerIndex) {
+                                classes += ' selected';
+                            }
+                            
+                            return `
+                                <button class="${classes}" 
+                                        data-question="${question.id}" 
+                                        data-answer="${answerIndex}"
+                                        ${isSubmitted ? 'disabled' : ''}
+                                        onclick="${isSubmitted ? '' : `selectAnswer('${question.id}', ${answerIndex})`}">
+                                    ${String.fromCharCode(65 + answerIndex)}. ${answer}
+                                </button>
+                            `;
+                        }).join('')}
                     </div>
                 `;
             });
             
-            html += '<button class="submit-btn" onclick="submitAnswers()">Submit Answers</button>';
+            // Only show submit button if there are unsubmitted questions
+            const hasUnsubmitted = activeQuestions.some(q => !submittedQuestions.has(q.id));
+            if (hasUnsubmitted) {
+                html += '<button class="submit-btn" onclick="submitAnswers()">Submit Answers</button>';
+            }
+            
             html += '<div id="message"></div>';
             
             contentDiv.innerHTML = html;
@@ -209,6 +652,8 @@
         
         // Select answer
         window.selectAnswer = function(questionId, answerIndex) {
+            if (submittedQuestions.has(questionId)) return;
+            
             // Update UI
             document.querySelectorAll(`[data-question="${questionId}"]`).forEach(btn => {
                 btn.classList.remove('selected');
@@ -223,9 +668,20 @@
         window.submitAnswers = function() {
             const messageDiv = document.getElementById('message');
             
-            // Check if all questions are answered
+            // Get all active unsubmitted questions
             const questionCards = document.querySelectorAll('.question-card');
-            if (Object.keys(selectedAnswers).length < questionCards.length) {
+            const unsubmittedQuestions = [];
+            
+            questionCards.forEach(card => {
+                const questionId = card.querySelector('.answer-option').dataset.question;
+                if (!submittedQuestions.has(questionId)) {
+                    unsubmittedQuestions.push(questionId);
+                }
+            });
+            
+            // Check if all unsubmitted questions are answered
+            const unansweredQuestions = unsubmittedQuestions.filter(id => selectedAnswers[id] === undefined);
+            if (unansweredQuestions.length > 0) {
                 messageDiv.innerHTML = '<div class="message" style="color: #d32f2f;">Please answer all questions before submitting.</div>';
                 return;
             }
@@ -235,31 +691,84 @@
             submitBtn.disabled = true;
             submitBtn.textContent = 'Submitting...';
             
-            // Submit each answer
-            const promises = Object.entries(selectedAnswers).map(([questionId, answerIndex]) => {
-                const responseRef = ref(database, `responses/${questionId}/${sessionId}`);
-                return set(responseRef, answerIndex);
-            });
+            // Submit each answer and calculate points
+            const promises = [];
+            let pointsEarned = 0;
+            let correctInThisSubmit = 0;
             
-            Promise.all(promises)
-                .then(() => {
-                    messageDiv.innerHTML = '<div class="success-message">Thank you! Your responses have been submitted.</div>';
-                    submitBtn.textContent = 'Submitted';
+            // First, get the questions data to check correct answers
+            const questionsRef = ref(database, 'questions');
+            get(questionsRef).then((snapshot) => {
+                const questions = snapshot.val() || {};
+                
+                unsubmittedQuestions.forEach(questionId => {
+                    const question = questions[questionId];
+                    const userAnswer = selectedAnswers[questionId];
+                    const correctAnswer = question.correctAnswer;
+                    const points = question.points || 1;
                     
-                    //Forward to result after submission
-                    setTimeout(() => {
-                    window.location.href = 'results.html';
-                    }, 2000);
-                })
-                .catch(error => {
-                    console.error('Error submitting:', error);
-                    messageDiv.innerHTML = '<div class="message" style="color: #d32f2f;">Error submitting responses. Please try again.</div>';
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'Submit Answers';
+                    // Check if answer is correct
+                    if (correctAnswer !== undefined && userAnswer === correctAnswer) {
+                        pointsEarned += points;
+                        correctInThisSubmit++;
+                    }
+                    
+                    // Submit the answer
+                    const responseRef = ref(database, `responses/${questionId}/${sessionId}`);
+                    promises.push(set(responseRef, userAnswer));
+                    
+                    // Mark as submitted
+                    submittedQuestions.add(questionId);
                 });
+                
+                // Update totals
+                currentScore += pointsEarned;
+                correctCount += correctInThisSubmit;
+                totalAnswered += unsubmittedQuestions.length;
+                
+                Promise.all(promises)
+                    .then(() => {
+                        // Update score in database
+                        updateScoreInDatabase();
+                        
+                        // Show feedback
+                        let feedbackClass = pointsEarned > 0 ? 'correct' : 'incorrect';
+                        let feedbackText = pointsEarned > 0 
+                            ? `✅ Great! You earned ${pointsEarned} ${pointsEarned === 1 ? 'point' : 'points'}!`
+                            : '❌ Not quite right this time.';
+                        
+                        messageDiv.innerHTML = `<div class="feedback-message ${feedbackClass}">${feedbackText}</div>`;
+                        
+                        // Update score display
+                        updateScoreDisplay();
+                        
+                        // Reload questions to show correct answers
+                        loadQuestions();
+                        
+                        // Forward to results after submission
+                        setTimeout(() => {
+                            window.location.href = 'results.html';
+                        }, 2000);
+                    })
+                    .catch(error => {
+                        console.error('Error submitting:', error);
+                        messageDiv.innerHTML = '<div class="message" style="color: #d32f2f;">Error submitting responses. Please try again.</div>';
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Submit Answers';
+                        
+                        // Rollback
+                        unsubmittedQuestions.forEach(id => submittedQuestions.delete(id));
+                        currentScore -= pointsEarned;
+                        correctCount -= correctInThisSubmit;
+                        totalAnswered -= unsubmittedQuestions.length;
+                    });
+            });
         };
         
         // Initialize
+        initializeNickname();
+        loadCurrentScore();
+        loadSubmittedAnswers();
         loadQuestions();
     </script>
 </body>
