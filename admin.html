@@ -137,6 +137,17 @@
             color: #666;
         }
         
+        .correct-answer {
+            color: #2e7d32;
+            font-weight: 600;
+        }
+        
+        .question-meta {
+            margin-top: 8px;
+            font-size: 14px;
+            color: #51247A;
+        }
+        
         .toggle-switch {
             position: relative;
             display: inline-block;
@@ -193,12 +204,18 @@
             font-weight: 500;
         }
         
-        .form-group input {
+        .form-group input, .form-group select {
             width: 100%;
             padding: 8px 12px;
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 14px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
         }
         
         .answer-inputs {
@@ -327,26 +344,44 @@
                     <label>Question Text:</label>
                     <input type="text" id="questionText" placeholder="Enter your question">
                 </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Point Value:</label>
+                        <select id="pointValue">
+                            <option value="1">1 point</option>
+                            <option value="2">2 points</option>
+                            <option value="3">3 points</option>
+                            <option value="4">4 points</option>
+                            <option value="5">5 points</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Correct Answer:</label>
+                        <select id="correctAnswer">
+                            <option value="">Select after adding answers</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="answer-inputs">
                     <div class="answer-input">
                         <label>A.</label>
-                        <input type="text" id="answer0" placeholder="Answer option A">
+                        <input type="text" id="answer0" placeholder="Answer option A" onkeyup="updateCorrectAnswerOptions()">
                     </div>
                     <div class="answer-input">
                         <label>B.</label>
-                        <input type="text" id="answer1" placeholder="Answer option B">
+                        <input type="text" id="answer1" placeholder="Answer option B" onkeyup="updateCorrectAnswerOptions()">
                     </div>
                     <div class="answer-input">
                         <label>C.</label>
-                        <input type="text" id="answer2" placeholder="Answer option C (optional)">
+                        <input type="text" id="answer2" placeholder="Answer option C (optional)" onkeyup="updateCorrectAnswerOptions()">
                     </div>
                     <div class="answer-input">
                         <label>D.</label>
-                        <input type="text" id="answer3" placeholder="Answer option D (optional)">
+                        <input type="text" id="answer3" placeholder="Answer option D (optional)" onkeyup="updateCorrectAnswerOptions()">
                     </div>
                     <div class="answer-input">
                         <label>E.</label>
-                        <input type="text" id="answer4" placeholder="Answer option E (optional)">
+                        <input type="text" id="answer4" placeholder="Answer option E (optional)" onkeyup="updateCorrectAnswerOptions()">
                     </div>
                 </div>
                 <button class="btn btn-primary" onclick="addQuestion()">Add Question</button>
@@ -362,13 +397,21 @@
                     <span>Show results to students</span>
                 </div>
                 
+                <div style="margin-bottom: 20px;">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="leaderboardVisibleToggle" onchange="toggleLeaderboardVisibility(this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                    <span>Show leaderboard to students</span>
+                </div>
+                
                 <div style="padding-top: 20px; border-top: 1px solid #e0e0e0;">
                     <h3 style="color: #d32f2f; margin-bottom: 10px;">Danger Zone</h3>
                     <button class="btn btn-danger" onclick="clearAllResponses()">
                         Clear All Responses
                     </button>
                     <p style="color: #666; font-size: 14px; margin-top: 10px;">
-                        This will delete all student responses. Questions will remain.
+                        This will delete all student responses and scores. Questions will remain.
                     </p>
                 </div>
             </div>
@@ -389,7 +432,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js';
-        import { getDatabase, ref, onValue, push, set } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js';
+        import { getDatabase, ref, onValue, push, set, remove } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js';
         
         // Firebase configuration
         const firebaseConfig = {
@@ -408,6 +451,28 @@
         
         // Simple password protection (in production, use proper authentication)
         const ADMIN_PASSWORD = 'uqadmin2024'; // Change this!
+        
+        // Update correct answer dropdown when answers change
+        window.updateCorrectAnswerOptions = function() {
+            const correctAnswerSelect = document.getElementById('correctAnswer');
+            const currentValue = correctAnswerSelect.value;
+            correctAnswerSelect.innerHTML = '<option value="">Select correct answer</option>';
+            
+            for (let i = 0; i < 5; i++) {
+                const answer = document.getElementById(`answer${i}`).value.trim();
+                if (answer) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = `${String.fromCharCode(65 + i)}. ${answer}`;
+                    correctAnswerSelect.appendChild(option);
+                }
+            }
+            
+            // Restore previous selection if still valid
+            if (currentValue && document.getElementById(`answer${currentValue}`).value.trim()) {
+                correctAnswerSelect.value = currentValue;
+            }
+        };
         
         // Login function
         window.login = function() {
@@ -448,27 +513,49 @@
             });
         };
 
-        // initialize the toggle when admin loads
+        // Toggle leaderboard visibility
+        window.toggleLeaderboardVisibility = function(visible) {
+            const settingsRef = ref(database, 'settings/leaderboardVisible');
+            set(settingsRef, visible).then(() => {
+                console.log('Leaderboard visibility set to:', visible);
+            }).catch(error => {
+                console.error('Error setting visibility:', error);
+                alert('Error updating settings');
+            });
+        };
+
+        // initialize the toggles when admin loads
         function loadSettings() {
-            const settingsRef = ref(database, 'settings/resultsVisible');
-            onValue(settingsRef, (snapshot) => {
+            const resultsRef = ref(database, 'settings/resultsVisible');
+            onValue(resultsRef, (snapshot) => {
                 const isVisible = snapshot.val();
                 document.getElementById('resultsVisibleToggle').checked = isVisible === true;
+            });
+            
+            const leaderboardRef = ref(database, 'settings/leaderboardVisible');
+            onValue(leaderboardRef, (snapshot) => {
+                const isVisible = snapshot.val();
+                document.getElementById('leaderboardVisibleToggle').checked = isVisible === true;
             });
         }
 
         // Clear all responses
         window.clearAllResponses = function() {
-            if (confirm('Clear all student responses? This cannot be undone.')) {
+            if (confirm('Clear all student responses and scores? This cannot be undone.')) {
                 const responsesRef = ref(database, 'responses');
-                set(responsesRef, null)
-                    .then(() => {
-                        alert('All responses cleared!');
-                    })
-                    .catch(error => {
-                        console.error('Error clearing responses:', error);
-                        alert('Error clearing responses: ' + error.message);
-                    });
+                const scoresRef = ref(database, 'currentSession/scores');
+                
+                Promise.all([
+                    set(responsesRef, null),
+                    set(scoresRef, null)
+                ])
+                .then(() => {
+                    alert('All responses and scores cleared!');
+                })
+                .catch(error => {
+                    console.error('Error clearing data:', error);
+                    alert('Error clearing data: ' + error.message);
+                });
             }
         };
         
@@ -491,6 +578,8 @@
         window.addQuestion = function() {
             const questionText = document.getElementById('questionText').value.trim();
             const answers = [];
+            const pointValue = parseInt(document.getElementById('pointValue').value);
+            const correctAnswer = document.getElementById('correctAnswer').value;
             
             for (let i = 0; i < 5; i++) {
                 const answer = document.getElementById(`answer${i}`).value.trim();
@@ -509,6 +598,18 @@
                 return;
             }
             
+            if (correctAnswer === '') {
+                alert('Please select the correct answer');
+                return;
+            }
+            
+            // Check if correct answer index is valid
+            const correctIndex = parseInt(correctAnswer);
+            if (correctIndex >= answers.length) {
+                alert('Invalid correct answer selection');
+                return;
+            }
+            
             // Check total questions
             const questionsRef = ref(database, 'questions');
             onValue(questionsRef, (snapshot) => {
@@ -523,11 +624,15 @@
                 set(newQuestionRef, {
                     text: questionText,
                     answers: answers,
+                    points: pointValue,
+                    correctAnswer: correctIndex,
                     active: true,
                     createdAt: Date.now()
                 }).then(() => {
                     // Clear form
                     document.getElementById('questionText').value = '';
+                    document.getElementById('pointValue').value = '1';
+                    document.getElementById('correctAnswer').innerHTML = '<option value="">Select after adding answers</option>';
                     for (let i = 0; i < 5; i++) {
                         document.getElementById(`answer${i}`).value = '';
                     }
@@ -558,15 +663,22 @@
             
             let html = '';
             Object.entries(questions).forEach(([id, question]) => {
+                const points = question.points || 1;
+                const correctAnswer = question.correctAnswer;
+                
                 html += `
                     <div class="question-item ${question.active ? 'active' : ''}">
                         <div class="question-header">
-                            <div>
+                            <div style="flex: 1;">
                                 <div class="question-text">${question.text}</div>
                                 <div class="question-answers">
-                                    ${question.answers.map((ans, idx) => 
-                                        `${String.fromCharCode(65 + idx)}. ${ans}`
-                                    ).join(' | ')}
+                                    ${question.answers.map((ans, idx) => {
+                                        const isCorrect = idx === correctAnswer;
+                                        return `<span class="${isCorrect ? 'correct-answer' : ''}">${String.fromCharCode(65 + idx)}. ${ans}${isCorrect ? ' ✓' : ''}</span>`;
+                                    }).join(' | ')}
+                                </div>
+                                <div class="question-meta">
+                                    Points: ${points} | Correct: ${String.fromCharCode(65 + correctAnswer)}
                                 </div>
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px;">
@@ -608,6 +720,7 @@
         if (localStorage.getItem('adminLoggedIn') === 'true') {
             loadQuestions();
             generateQRCode();
+            loadSettings();
         }
         
         // Enter key submits login

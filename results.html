@@ -92,6 +92,17 @@
             font-size: 18px;
         }
         
+        .points-indicator {
+            background-color: #51247A;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-block;
+            margin-left: 10px;
+        }
+        
         .chart-container {
             position: relative;
             height: 300px;
@@ -106,17 +117,27 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid #f0f0f0;
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
         }
         
-        .answer-stat:last-child {
-            border-bottom: none;
+        .answer-stat.correct-answer {
+            background-color: #d4f4dd;
+            border-color: #2e7d32;
         }
         
         .answer-label {
             font-weight: 500;
             color: #333;
+            flex: 1;
+        }
+        
+        .correct-indicator {
+            color: #2e7d32;
+            font-weight: 600;
+            margin-left: 10px;
         }
         
         .answer-count {
@@ -132,9 +153,19 @@
             transition: width 0.3s ease;
         }
         
+        .answer-bar.correct {
+            background-color: #2e7d32;
+        }
+        
         .answer-percent {
             font-weight: 600;
             color: #51247A;
+            min-width: 80px;
+            text-align: right;
+        }
+        
+        .answer-percent.correct {
+            color: #2e7d32;
         }
         
         .total-responses {
@@ -524,7 +555,7 @@
                                     answerCounts[answerIndex]++;
                                 }
                             });
-                            createChart(question.id, question.answers, answerCounts);
+                            createChart(question.id, question.answers, answerCounts, question.correctAnswer);
                         });
                     }, 100);
                 }
@@ -543,6 +574,8 @@
             activeQuestions.forEach((question, index) => {
                 const questionResponses = responsesData[question.id] || {};
                 const responseCount = Object.keys(questionResponses).length;
+                const points = question.points || 1;
+                const correctAnswer = question.correctAnswer;
                 
                 // Count responses for each answer
                 const answerCounts = new Array(question.answers.length).fill(0);
@@ -554,7 +587,9 @@
                 
                 html += `
                     <div class="result-card">
-                        <h3>Question ${index + 1}: ${question.text}</h3>
+                        <h3>Question ${index + 1}: ${question.text}
+                            <span class="points-indicator">${points} ${points === 1 ? 'point' : 'points'}</span>
+                        </h3>
                         <div class="chart-container">
                             <canvas id="chart-${question.id}"></canvas>
                         </div>
@@ -563,13 +598,17 @@
                                 const count = answerCounts[idx];
                                 const percent = responseCount > 0 ? Math.round((count / responseCount) * 100) : 0;
                                 const barWidth = responseCount > 0 ? (count / responseCount) * 100 : 0;
+                                const isCorrect = idx === correctAnswer;
                                 
                                 return `
-                                    <div class="answer-stat">
-                                        <div class="answer-label">${String.fromCharCode(65 + idx)}. ${answer}</div>
+                                    <div class="answer-stat ${isCorrect ? 'correct-answer' : ''}">
+                                        <div class="answer-label">
+                                            ${String.fromCharCode(65 + idx)}. ${answer}
+                                            ${isCorrect ? '<span class="correct-indicator">✓ Correct</span>' : ''}
+                                        </div>
                                         <div class="answer-count">
-                                            <div class="answer-bar" style="width: ${barWidth}px;"></div>
-                                            <span class="answer-percent">${count} (${percent}%)</span>
+                                            <div class="answer-bar ${isCorrect ? 'correct' : ''}" style="width: ${barWidth}px;"></div>
+                                            <span class="answer-percent ${isCorrect ? 'correct' : ''}">${count} (${percent}%)</span>
                                         </div>
                                     </div>
                                 `;
@@ -676,7 +715,7 @@
         };
         
         // Create chart
-        function createChart(questionId, labels, data) {
+        function createChart(questionId, labels, data, correctAnswer) {
             const ctx = document.getElementById(`chart-${questionId}`);
             if (!ctx) return;
             
@@ -690,6 +729,13 @@
                 `${String.fromCharCode(65 + idx)}. ${label.substring(0, 30)}${label.length > 30 ? '...' : ''}`
             );
             
+            // Customize colors - highlight correct answer in green
+            const backgroundColors = labels.map((_, idx) => 
+                idx === correctAnswer ? '#2e7d32' : chartColors[idx % chartColors.length]
+            );
+            
+            const borderColors = backgroundColors.map(color => color + 'dd');
+            
             charts[questionId] = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -697,8 +743,8 @@
                     datasets: [{
                         label: 'Responses',
                         data: data,
-                        backgroundColor: chartColors,
-                        borderColor: chartColors.map(c => c + 'dd'),
+                        backgroundColor: backgroundColors,
+                        borderColor: borderColors,
                         borderWidth: 1
                     }]
                 },
@@ -715,7 +761,8 @@
                                     const total = context.dataset.data.reduce((a, b) => a + b, 0);
                                     const value = context.parsed.y;
                                     const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-                                    return `${value} responses (${percentage}%)`;
+                                    const isCorrect = context.dataIndex === correctAnswer;
+                                    return `${value} responses (${percentage}%)${isCorrect ? ' - Correct Answer' : ''}`;
                                 }
                             }
                         }

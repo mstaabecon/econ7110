@@ -82,23 +82,9 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
-        .score-display .points {
-            font-size: 24px;
-            font-weight: bold;
+        .score-display .submissions {
+            font-size: 18px;
             color: #51247A;
-        }
-        
-        .score-display .accuracy {
-            font-size: 14px;
-            color: #666;
-            margin-top: 5px;
-        }
-        
-        .score-display .privacy-note {
-            font-size: 12px;
-            color: #999;
-            margin-top: 5px;
-            font-style: italic;
         }
         
         .question-card {
@@ -159,24 +145,13 @@
         .answer-option.disabled {
             cursor: not-allowed;
             opacity: 0.6;
+            background-color: #f5f5f5;
         }
         
-        .answer-option.correct {
-            background-color: #d4f4dd;
-            border-color: #2e7d32;
-            color: #2e7d32;
-        }
-        
-        .answer-option.incorrect {
-            background-color: #ffebee;
-            border-color: #d32f2f;
-            color: #d32f2f;
-        }
-        
-        .answer-option.missed-correct {
-            background-color: #fff3cd;
-            border-color: #ffc107;
-            color: #856404;
+        .answer-option.submitted {
+            background-color: #e8e8e8;
+            border-color: #ccc;
+            color: #666;
         }
         
         .submit-btn {
@@ -214,16 +189,8 @@
             text-align: center;
             margin: 20px 0;
             font-weight: 500;
-        }
-        
-        .feedback-message.correct {
-            background-color: #d4f4dd;
-            color: #2e7d32;
-        }
-        
-        .feedback-message.incorrect {
-            background-color: #ffebee;
-            color: #d32f2f;
+            background-color: #f0f0f0;
+            color: #333;
         }
         
         .loading {
@@ -331,8 +298,7 @@
     
     <div class="container">
         <div id="scoreDisplay" class="score-display" style="display: none;">
-            <div class="points">0 points</div>
-            <div class="accuracy">0/0 correct</div>
+            <div class="submissions">Questions Submitted: <span id="submissionCount">0</span></div>
         </div>
         
         <div id="content">
@@ -490,8 +456,6 @@
             });
         }
         
-        
-        
         // Load current score
         function loadCurrentScore() {
             const scoreRef = ref(database, `currentSession/scores/${sessionId}`);
@@ -511,8 +475,7 @@
             const scoreDiv = document.getElementById('scoreDisplay');
             if (totalAnswered > 0) {
                 scoreDiv.style.display = 'block';
-                scoreDiv.querySelector('.points').textContent = `${currentScore} points`;
-                scoreDiv.querySelector('.accuracy').textContent = `${correctCount}/${totalAnswered} correct`;
+                document.getElementById('submissionCount').textContent = totalAnswered;
             }
         }
         
@@ -524,6 +487,7 @@
                 Object.entries(responses).forEach(([questionId, questionResponses]) => {
                     if (questionResponses[sessionId] !== undefined) {
                         submittedQuestions.add(questionId);
+                        selectedAnswers[questionId] = questionResponses[sessionId];
                     }
                 });
             });
@@ -571,17 +535,9 @@
                             let classes = 'answer-option';
                             if (isSubmitted) {
                                 classes += ' disabled';
-                                const submittedAnswer = selectedAnswers[question.id];
-                                const correctAnswer = question.correctAnswer;
-                                
-                                if (correctAnswer !== undefined) {
-                                    if (answerIndex === correctAnswer && answerIndex === submittedAnswer) {
-                                        classes += ' correct';
-                                    } else if (answerIndex === submittedAnswer && answerIndex !== correctAnswer) {
-                                        classes += ' incorrect';
-                                    } else if (answerIndex === correctAnswer) {
-                                        classes += ' missed-correct';
-                                    }
+                                // Show which answer was submitted without revealing if correct
+                                if (selectedAnswers[question.id] === answerIndex) {
+                                    classes += ' submitted';
                                 }
                             } else if (selectedAnswers[question.id] === answerIndex) {
                                 classes += ' selected';
@@ -693,18 +649,13 @@
                         // Update score in database
                         updateScoreInDatabase();
                         
-                        // Show feedback
-                        let feedbackClass = pointsEarned > 0 ? 'correct' : 'incorrect';
-                        let feedbackText = pointsEarned > 0 
-                            ? `✅ Great! You earned ${pointsEarned} ${pointsEarned === 1 ? 'point' : 'points'}!`
-                            : '❌ Not quite right this time.';
-                        
-                        messageDiv.innerHTML = `<div class="feedback-message ${feedbackClass}">${feedbackText}</div>`;
+                        // Show neutral feedback
+                        messageDiv.innerHTML = `<div class="feedback-message">✓ Answers submitted successfully!</div>`;
                         
                         // Update score display
                         updateScoreDisplay();
                         
-                        // Reload questions to show correct answers
+                        // Reload questions to show submitted state
                         loadQuestions();
                         
                         // Forward to results after submission
@@ -735,3 +686,4 @@
     </script>
 </body>
 </html>
+            
