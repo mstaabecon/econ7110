@@ -558,10 +558,12 @@
                 });
             }
         };
+
+        
         
         // Generate QR Code
         function generateQRCode() {
-            const url = window.location.href.replace('admin.html', '');
+            const url = window.location.href.replace('admin.html', 'index.html');
             document.getElementById('urlDisplay').textContent = url;
             
             new QRCode(document.getElementById("qrcode"), {
