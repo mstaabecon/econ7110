@@ -563,11 +563,18 @@
         
         // Generate QR Code
         function generateQRCode() {
-            const url = window.location.href.replace('admin.html', 'index.html');
-            document.getElementById('urlDisplay').textContent = url;
+            // Get the current URL and replace admin.html with index.html
+            const currentUrl = window.location.href;
+            const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/'));
+            const studentUrl = baseUrl + '/index.html';
+            
+            document.getElementById('urlDisplay').textContent = studentUrl;
+            
+            // Clear any existing QR code first
+            document.getElementById("qrcode").innerHTML = '';
             
             new QRCode(document.getElementById("qrcode"), {
-                text: url,
+                text: studentUrl,
                 width: 200,
                 height: 200,
                 colorDark: "#51247A",
