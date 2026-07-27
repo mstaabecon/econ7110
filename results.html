@@ -5,406 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Results - ECON7110 Live</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-            background-color: #f5f5f5;
-            min-height: 100vh;
-        }
-        
-        .header {
-            background-color: #51247A;
-            color: white;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .header-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #e0e0e0;
-        }
-        
-        .tab {
-            padding: 10px 20px;
-            background: none;
-            border: none;
-            font-size: 16px;
-            cursor: pointer;
-            color: #666;
-            border-bottom: 3px solid transparent;
-            transition: all 0.2s;
-        }
-        
-        .tab:hover {
-            color: #51247A;
-        }
-        
-        .tab.active {
-            color: #51247A;
-            border-bottom-color: #51247A;
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        .results-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 20px;
-        }
-        
-        .result-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .result-card h3 {
-            color: #51247A;
-            margin-bottom: 15px;
-            font-size: 18px;
-        }
-        
-        .points-indicator {
-            background-color: #51247A;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 500;
-            display: inline-block;
-            margin-left: 10px;
-        }
-        
-        .chart-container {
-            position: relative;
-            height: 300px;
-            margin-top: 15px;
-        }
-        
-        .answer-stats {
-            margin-top: 15px;
-        }
-        
-        .answer-stat {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 12px;
-            margin-bottom: 5px;
-            border-radius: 4px;
-            border: 1px solid #e0e0e0;
-        }
-        
-        .answer-stat.correct-answer {
-            background-color: #d4f4dd;
-            border-color: #2e7d32;
-        }
-        
-        .answer-label {
-            font-weight: 500;
-            color: #333;
-            flex: 1;
-        }
-        
-        .correct-indicator {
-            color: #2e7d32;
-            font-weight: 600;
-            margin-left: 10px;
-        }
-        
-        .answer-count {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .answer-bar {
-            height: 20px;
-            background-color: #51247A;
-            border-radius: 3px;
-            transition: width 0.3s ease;
-        }
-        
-        .answer-bar.correct {
-            background-color: #2e7d32;
-        }
-        
-        .answer-percent {
-            font-weight: 600;
-            color: #51247A;
-            min-width: 80px;
-            text-align: right;
-        }
-        
-        .answer-percent.correct {
-            color: #2e7d32;
-        }
-        
-        .total-responses {
-            text-align: center;
-            color: #666;
-            margin-top: 10px;
-            font-size: 14px;
-        }
-        
-        .leaderboard-container {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        
-        .leaderboard-title {
-            text-align: center;
-            color: #51247A;
-            margin-bottom: 30px;
-            font-size: 28px;
-        }
-        
-        .leaderboard-item {
-            display: flex;
-            align-items: center;
-            padding: 15px 20px;
-            margin-bottom: 10px;
-            background: #f8f8f8;
-            border-radius: 8px;
-            transition: all 0.2s;
-        }
-        
-        .leaderboard-item:hover {
-            background: #f0f0f0;
-            transform: translateX(5px);
-        }
-        
-        .leaderboard-item.top-3 {
-            background: linear-gradient(to right, #f8f6fb, #f8f8f8);
-            border-left: 4px solid #51247A;
-        }
-        
-        .leaderboard-rank {
-            font-size: 24px;
-            font-weight: bold;
-            color: #51247A;
-            width: 50px;
-        }
-        
-        .leaderboard-rank.gold {
-            color: #FFD700;
-        }
-        
-        .leaderboard-rank.silver {
-            color: #C0C0C0;
-        }
-        
-        .leaderboard-rank.bronze {
-            color: #CD7F32;
-        }
-        
-        .leaderboard-name {
-            flex: 1;
-            font-size: 18px;
-            color: #333;
-        }
-        
-        .leaderboard-stats {
-            text-align: right;
-        }
-        
-        .leaderboard-points {
-            font-size: 20px;
-            font-weight: bold;
-            color: #51247A;
-        }
-        
-        .leaderboard-accuracy {
-            font-size: 14px;
-            color: #666;
-        }
-        
-        .no-responses {
-            text-align: center;
-            color: #999;
-            padding: 40px 0;
-        }
-        
-        .refresh-info {
-            text-align: center;
-            color: #666;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-        
-        .refresh-icon {
-            display: inline-block;
-            margin-left: 5px;
-            animation: spin 2s linear infinite;
-        }
-        
-        @keyframes spin {
-            100% { transform: rotate(360deg); }
-        }
-        
-        .message-container {
-            text-align: center;
-            padding: 100px 20px;
-        }
-        
-        .waiting-message {
-            background: white;
-            padding: 60px 40px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            max-width: 500px;
-            margin: 0 auto;
-        }
-        
-        .waiting-icon {
-            font-size: 64px;
-            margin-bottom: 20px;
-            animation: pulse 2s ease-in-out infinite;
-        }
-        
-        @keyframes pulse {
-            0% { opacity: 0.6; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.05); }
-            100% { opacity: 0.6; transform: scale(1); }
-        }
-        
-        .waiting-title {
-            font-size: 28px;
-            color: #51247A;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-        
-        .waiting-subtitle {
-            font-size: 18px;
-            color: #666;
-            line-height: 1.5;
-        }
-        
-        .loading-dots {
-            display: inline-block;
-        }
-        
-        .loading-dots::after {
-            content: '';
-            animation: dots 1.5s steps(4, end) infinite;
-        }
-        
-        @keyframes dots {
-            0% { content: ''; }
-            25% { content: '.'; }
-            50% { content: '..'; }
-            75% { content: '...'; }
-            100% { content: ''; }
-        }
-        
-        .no-questions {
-            text-align: center;
-            padding: 60px 20px;
-            color: #666;
-        }
-        
-        .back-link {
-            color: white;
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            transition: background-color 0.2s;
-        }
-        
-        .back-link:hover {
-            background-color: rgba(255,255,255,0.1);
-        }
-        
-        .student-link {
-            color: white;
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            transition: background-color 0.2s;
-        }
-        
-        .student-link:hover {
-            background-color: rgba(255,255,255,0.1);
-        }
-        
-        .your-position {
-            background: #51247A;
-            color: white;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        
-        .your-position h3 {
-            font-size: 20px;
-            margin-bottom: 10px;
-        }
-        
-        .your-position .stats {
-            font-size: 24px;
-            font-weight: bold;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background: #fff; color: #222; min-height: 100vh; }
+        .topbar { background: #51247A; color: #fff; padding: 14px 28px; display: flex; justify-content: space-between; align-items: center; }
+        .topbar .brand { font-size: 20px; font-weight: 500; }
+        .topbar .meta { font-size: 15px; opacity: 0.85; }
+        .screen { max-width: 1100px; margin: 0 auto; padding: 34px 30px; }
+        .join { text-align: center; padding: 30px 20px; }
+        .join h2 { font-size: 34px; color: #51247A; margin-bottom: 8px; }
+        .join p { font-size: 21px; color: #555; margin-bottom: 24px; }
+        #qrcode { display: inline-block; padding: 16px; background: #fff; border: 1px solid #eee; border-radius: 12px; }
+        .join .url { margin-top: 20px; font-family: monospace; font-size: 18px; color: #51247A; word-break: break-all; }
+        .qtext { font-size: 30px; font-weight: 600; color: #2b2b2b; line-height: 1.35; margin-bottom: 22px; }
+        .status { font-size: 19px; color: #51247A; font-weight: 500; margin-bottom: 22px; }
+        .opt-list { }
+        .opt { display: flex; gap: 12px; font-size: 22px; color: #333; padding: 13px 18px; border: 1px solid #e6e6e6; border-radius: 8px; margin-bottom: 11px; }
+        .opt .l { font-weight: 600; color: #51247A; }
+        .gain { background: #eef7f0; border: 1px solid #b9ddc4; border-radius: 8px; padding: 14px 18px; margin-bottom: 24px; font-size: 20px; color: #1f6e3d; }
+        .bar-row { margin-bottom: 18px; }
+        .bar-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 19px; color: #444; margin-bottom: 6px; gap: 14px; }
+        .bar-label { font-weight: 500; }
+        .bar-pct { color: #888; font-size: 16px; white-space: nowrap; }
+        .bar-pct.c { color: #1f6e3d; font-weight: 600; }
+        .bar-track { height: 16px; background: #efefef; border-radius: 5px; overflow: hidden; }
+        .bar-fill { height: 100%; background: #7b4397; border-radius: 5px; }
+        .bar-fill.correct { background: #2e7d32; }
+        .reveal-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 30px; align-items: start; }
+        .flow-title { font-size: 15px; color: #888; text-align: center; margin-top: 6px; }
+        .total { text-align: center; color: #888; font-size: 16px; margin-top: 16px; }
+        @media (max-width: 720px) { .reveal-grid { grid-template-columns: 1fr; } .qtext { font-size: 24px; } .opt { font-size: 19px; } }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="header-content">
-            <h1>Results - ECON7110 Live</h1>
-            <div>
-                <a href="index.html" class="student-link">← Back to Questions</a>
-            </div>
-        </div>
-    </div>
-    
-    <div class="container">
-        <div id="mainContent">
-            <!-- Content will be dynamically inserted here -->
-        </div>
-    </div>
+    <div class="topbar"><span class="brand">ECON7110 Live</span><span class="meta" id="meta"></span></div>
+    <div class="screen"><div id="content"><div class="join"><p>Loading…</p></div></div></div>
 
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <!-- Firebase SDK -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js';
         import { getDatabase, ref, onValue } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js';
-        
-        // Firebase configuration
+
         const firebaseConfig = {
             apiKey: "AIzaSyBZCW5tAWc-I5XAXqFDRazoeWIhQtNxcu4",
             authDomain: "econ7110.firebaseapp.com",
@@ -414,386 +54,176 @@
             messagingSenderId: "667390196212",
             appId: "1:667390196212:web:59b6cc3983be3a1aa1a1a1"
         };
-        
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
-        
-        // Store data
-        let resultsVisible = false;
-        let leaderboardVisible = false;
-        let questionsData = {};
-        let responsesData = {};
-        let scoresData = {};
-        const charts = {};
-        
-        // Get current session ID
-        const sessionId = localStorage.getItem('sessionId');
-        
-        // Colors for the charts
-        const chartColors = [
-            '#51247A',
-            '#7b4397',
-            '#9c64b8',
-            '#bd85d9',
-            '#dea6fa'
-        ];
-        
-        // Initialize listeners
-        function initializeListeners() {
-            // Listen to visibility settings
-            const resultsRef = ref(database, 'settings/resultsVisible');
-            onValue(resultsRef, (snapshot) => {
-                resultsVisible = snapshot.val();
-                if (resultsVisible === null) {
-                    resultsVisible = false;
-                }
-                updateDisplay();
-            });
-            
-            const leaderboardRef = ref(database, 'settings/leaderboardVisible');
-            onValue(leaderboardRef, (snapshot) => {
-                leaderboardVisible = snapshot.val();
-                if (leaderboardVisible === null) {
-                    leaderboardVisible = false;
-                }
-                updateDisplay();
-            });
-            
-            // Listen to questions
-            const questionsRef = ref(database, 'questions');
-            onValue(questionsRef, (snapshot) => {
-                questionsData = snapshot.val() || {};
-                updateDisplay();
-            });
-            
-            // Listen to responses
-            const responsesRef = ref(database, 'responses');
-            onValue(responsesRef, (snapshot) => {
-                responsesData = snapshot.val() || {};
-                updateDisplay();
-            });
-            
-            // Listen to scores
-            const scoresRef = ref(database, 'currentSession/scores');
-            onValue(scoresRef, (snapshot) => {
-                scoresData = snapshot.val() || {};
-                updateDisplay();
-            });
+        const db = getDatabase(app);
+
+        let currentTerm = null, resultsVisible = false;
+        let questionsCache = {}, responsesCache = {};
+        let respSubId = null, unsubResp = null, unsubQ = null;
+        let lastMode = null;
+
+        onValue(ref(db, 'settings/currentTerm'), (snap) => {
+            currentTerm = snap.val();
+            if (unsubQ) { unsubQ(); unsubQ = null; }
+            questionsCache = {};
+            if (currentTerm) unsubQ = onValue(ref(db, `terms/${currentTerm}/questions`), (s) => { questionsCache = s.val() || {}; render(); });
+            else render();
+        });
+        onValue(ref(db, 'settings/resultsVisible'), (snap) => { resultsVisible = snap.val() === true; render(); });
+
+        function activeQ() {
+            const ids = Object.keys(questionsCache).filter(id => questionsCache[id].active);
+            if (!ids.length) return null;
+            return { id: ids[0], q: questionsCache[ids[0]] };
         }
-        
-        // Update display based on state
-        function updateDisplay() {
-            const mainContent = document.getElementById('mainContent');
-            
-            // Get active questions
-            const activeQuestions = Object.entries(questionsData)
-                .filter(([id, q]) => q.active)
-                .map(([id, q]) => ({ id, ...q }));
-            
-            if (!resultsVisible && !leaderboardVisible) {
-                // Show waiting message
-                mainContent.innerHTML = `
-                    <div class="message-container">
-                        <div class="waiting-message">
-                            <h2 class="waiting-title">Results Pending</h2>
-                            <p class="waiting-subtitle">The instructor will display results shortly.<br>Please stay on this page.</p>
-                        </div>
-                    </div>
-                `;
-            } else if (activeQuestions.length === 0 && resultsVisible) {
-                // Show no questions message
-                mainContent.innerHTML = `
-                    <div class="message-container">
-                        <div class="waiting-message">
-                            <div class="waiting-icon">📋</div>
-                            <h2 class="waiting-title">No active questions</h2>
-                            <p class="waiting-subtitle">Please wait for the instructor to activate questions.</p>
-                        </div>
-                    </div>
-                `;
+        function manageRespSub(id) {
+            if (id === respSubId) return;
+            if (unsubResp) { unsubResp(); unsubResp = null; }
+            respSubId = id; responsesCache = {};
+            if (id && currentTerm) unsubResp = onValue(ref(db, `terms/${currentTerm}/responses/${id}`), (s) => { responsesCache = s.val() || {}; render(); });
+        }
+
+        const sum = a => a.reduce((x, y) => x + y, 0);
+        const L = i => String.fromCharCode(65 + i);
+        function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+        function countsForRound(roundKey, n) {
+            const r = responsesCache[roundKey] || {};
+            const c = new Array(n).fill(0);
+            Object.values(r).forEach(v => { if (v >= 0 && v < n) c[v]++; });
+            return c;
+        }
+
+        function barsHtml(answers, counts, correctIndex, prevCounts) {
+            const total = sum(counts);
+            const prevTotal = prevCounts ? sum(prevCounts) : 0;
+            return answers.map((ans, i) => {
+                const c = counts[i] || 0;
+                const p = total ? Math.round(c / total * 100) : 0;
+                const ok = (correctIndex !== null && correctIndex !== undefined && i === correctIndex);
+                let extra = '';
+                if (prevCounts) { const pp = prevTotal ? Math.round((prevCounts[i] || 0) / prevTotal * 100) : 0; extra = ` · was ${pp}%`; }
+                return `<div class="bar-row">
+                    <div class="bar-top"><span class="bar-label">${L(i)}. ${esc(ans)}${ok ? ' ✓' : ''}</span><span class="bar-pct${ok ? ' c' : ''}">${c} (${p}%)${extra}</span></div>
+                    <div class="bar-track"><div class="bar-fill${ok ? ' correct' : ''}" style="width:${p}%"></div></div>
+                </div>`;
+            }).join('');
+        }
+
+        function correctnessFlow(r1key, r2key, correct) {
+            const r1 = responsesCache[r1key] || {}, r2 = responsesCache[r2key] || {};
+            let cc = 0, cw = 0, wc = 0, ww = 0;
+            Object.keys(r2).forEach(s => {
+                if (r1[s] === undefined) return;
+                const a1 = r1[s] === correct, a2 = r2[s] === correct;
+                if (a1 && a2) cc++; else if (a1 && !a2) cw++; else if (!a1 && a2) wc++; else ww++;
+            });
+            return { cc, cw, wc, ww };
+        }
+
+        function flowSvg(f) {
+            const total = f.cc + f.cw + f.wc + f.ww;
+            if (total === 0) return '<div style="text-align:center;color:#999;font-size:16px;padding:40px 0;">No paired responses yet.</div>';
+            const H = 176, top = 16, lx0 = 28, lx1 = 56, rx0 = 204, mid = 130;
+            const r1c = f.cc + f.cw, r1w = f.wc + f.ww, r2c = f.cc + f.wc, r2w = f.cw + f.ww;
+            const Lc = r1c / total * H, Lw = r1w / total * H, Rc = r2c / total * H, Rw = r2w / total * H;
+            const Lcc_t = top, Lcc_b = top + (r1c ? f.cc / r1c * Lc : 0);
+            const Lcw_t = Lcc_b, Lcw_b = top + Lc;
+            const Lwc_t = top + Lc, Lwc_b = top + Lc + (r1w ? f.wc / r1w * Lw : 0);
+            const Lww_t = Lwc_b, Lww_b = top + H;
+            const Rcc_t = top, Rcc_b = top + (r2c ? f.cc / r2c * Rc : 0);
+            const Rwc_t = Rcc_b, Rwc_b = top + Rc;
+            const Rcw_t = top + Rc, Rcw_b = top + Rc + (r2w ? f.cw / r2w * Rw : 0);
+            const Rww_t = Rcw_b, Rww_b = top + H;
+            const green = 'rgba(46,125,50,0.32)', gray = 'rgba(120,120,120,0.20)';
+            const rib = (at, ab, bt, bb, fill) => `<path d="M${lx1},${at} C${mid},${at} ${mid},${bt} ${rx0},${bt} L${rx0},${bb} C${mid},${bb} ${mid},${ab} ${lx1},${ab} Z" fill="${fill}"></path>`;
+            const wcPct = Math.round(f.wc / total * 100);
+            return `<svg viewBox="0 0 260 215" width="100%">
+                ${f.cc ? rib(Lcc_t, Lcc_b, Rcc_t, Rcc_b, green) : ''}
+                ${f.cw ? rib(Lcw_t, Lcw_b, Rcw_t, Rcw_b, gray) : ''}
+                ${f.wc ? rib(Lwc_t, Lwc_b, Rwc_t, Rwc_b, green) : ''}
+                ${f.ww ? rib(Lww_t, Lww_b, Rww_t, Rww_b, gray) : ''}
+                <rect x="${lx0}" y="${top}" width="28" height="${Lc}" fill="#cfe9d6" stroke="#2e7d32" stroke-width="0.5"></rect>
+                <rect x="${lx0}" y="${top + Lc}" width="28" height="${Lw}" fill="#e4e4e4" stroke="#b5b5b5" stroke-width="0.5"></rect>
+                <rect x="${rx0}" y="${top}" width="28" height="${Rc}" fill="#cfe9d6" stroke="#2e7d32" stroke-width="0.5"></rect>
+                <rect x="${rx0}" y="${top + Rc}" width="28" height="${Rw}" fill="#e4e4e4" stroke="#b5b5b5" stroke-width="0.5"></rect>
+                <text x="42" y="208" text-anchor="middle" font-size="12" fill="#777">Round 1</text>
+                <text x="218" y="208" text-anchor="middle" font-size="12" fill="#777">Round ${arguments[1] || 2}</text>
+                ${f.wc ? `<text x="130" y="118" text-anchor="middle" font-size="11.5" fill="#1f6e3d" font-weight="500">${wcPct}% moved to correct</text>` : ''}
+            </svg>`;
+        }
+
+        function renderJoin() {
+            const base = location.href.substring(0, location.href.lastIndexOf('/'));
+            const studentUrl = base + '/index.html';
+            document.getElementById('meta').textContent = '';
+            document.getElementById('content').innerHTML = `<div class="join">
+                <h2>ECON7110 Live</h2><p>Scan to join</p>
+                <div id="qrcode"></div>
+                <div class="url">${studentUrl}</div>
+            </div>`;
+            new QRCode(document.getElementById('qrcode'), { text: studentUrl, width: 280, height: 280, colorDark: '#51247A', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
+        }
+
+        function renderLive(q) {
+            const n = q.answers.length, round = q.round || 1, open = !!q.open, rounds = q.rounds || 1, showBars = !!q.showRound1Bars;
+            const counts = countsForRound('round' + round, n), total = sum(counts);
+            let status;
+            if (open) status = (round > 1 ? `Round ${round} — ` : '') + `voting open · ${total} response${total === 1 ? '' : 's'}`;
+            else if (round < rounds) status = 'Discussion — vote again shortly';
+            else status = 'Voting closed';
+            const opts = '<div class="opt-list">' + q.answers.map((ans, i) => `<div class="opt"><span class="l">${L(i)}.</span><span>${esc(ans)}</span></div>`).join('') + '</div>';
+            const showDiscussBars = (!open && round < rounds && showBars);
+            const main = showDiscussBars ? barsHtml(q.answers, countsForRound('round1', n), null, null) : opts;
+            document.getElementById('meta').textContent = q.type === 'poll' ? 'Poll' : '';
+            document.getElementById('content').innerHTML = `<div class="qtext">${esc(q.text)}</div><div class="status">${status}</div>${main}`;
+        }
+
+        function renderReveal(q) {
+            const n = q.answers.length, rounds = q.rounds || 1;
+            const correct = (q.revealedCorrect !== undefined && q.revealedCorrect !== null) ? q.revealedCorrect : null;
+            const isPoll = (q.type === 'poll' || correct === null);
+            document.getElementById('meta').textContent = isPoll ? 'Poll · results' : 'Results';
+            let body;
+            if (isPoll) {
+                const counts = countsForRound('round1', n), total = sum(counts);
+                body = `<div class="qtext">${esc(q.text)}</div>${barsHtml(q.answers, counts, null, null)}<div class="total">${total} response${total === 1 ? '' : 's'}</div>`;
+            } else if (rounds <= 1) {
+                const counts = countsForRound('round1', n), total = sum(counts);
+                body = `<div class="qtext">${esc(q.text)}</div>${barsHtml(q.answers, counts, correct, null)}<div class="total">${total} response${total === 1 ? '' : 's'}</div>`;
             } else {
-                // Show tabs if both are visible, otherwise show only the visible content
-                let html = '';
-                
-                if (resultsVisible && leaderboardVisible) {
-                    html += `
-                        <div class="tabs">
-                            <button class="tab active" onclick="showTab('results')">Results</button>
-                            <button class="tab" onclick="showTab('leaderboard')">Leaderboard</button>
-                        </div>
-                    `;
-                }
-                
-                html += '<div id="tabContent">';
-                
-                if (resultsVisible) {
-                    html += `<div id="resultsTab" class="tab-content ${!leaderboardVisible ? 'active' : 'active'}">`;
-                    html += getResultsHTML(activeQuestions);
-                    html += '</div>';
-                }
-                
-                if (leaderboardVisible) {
-                    html += `<div id="leaderboardTab" class="tab-content ${!resultsVisible ? 'active' : ''}">`;
-                    html += getLeaderboardHTML();
-                    html += '</div>';
-                }
-                
-                html += '</div>';
-                
-                mainContent.innerHTML = html;
-                
-                // Create charts after DOM is updated (if results are visible)
-                if (resultsVisible) {
-                    setTimeout(() => {
-                        activeQuestions.forEach((question) => {
-                            const questionResponses = responsesData[question.id] || {};
-                            const answerCounts = new Array(question.answers.length).fill(0);
-                            Object.values(questionResponses).forEach(answerIndex => {
-                                if (answerIndex >= 0 && answerIndex < answerCounts.length) {
-                                    answerCounts[answerIndex]++;
-                                }
-                            });
-                            createChart(question.id, question.answers, answerCounts, question.correctAnswer);
-                        });
-                    }, 100);
-                }
-            }
-        }
-        
-        // Get results HTML
-        function getResultsHTML(activeQuestions) {
-            let html = `
-                <div class="refresh-info">
-                    <span class="refresh-icon">⟳</span> Results update automatically
-                </div>
-                <div class="results-grid">
-            `;
-            
-            activeQuestions.forEach((question, index) => {
-                const questionResponses = responsesData[question.id] || {};
-                const responseCount = Object.keys(questionResponses).length;
-                const points = question.points || 1;
-                const correctAnswer = question.correctAnswer;
-                
-                // Count responses for each answer
-                const answerCounts = new Array(question.answers.length).fill(0);
-                Object.values(questionResponses).forEach(answerIndex => {
-                    if (answerIndex >= 0 && answerIndex < answerCounts.length) {
-                        answerCounts[answerIndex]++;
-                    }
-                });
-                
-                html += `
-                    <div class="result-card">
-                        <h3>Question ${index + 1}: ${question.text}
-                            <span class="points-indicator">${points} ${points === 1 ? 'point' : 'points'}</span>
-                        </h3>
-                        <div class="chart-container">
-                            <canvas id="chart-${question.id}"></canvas>
-                        </div>
-                        <div class="answer-stats">
-                            ${question.answers.map((answer, idx) => {
-                                const count = answerCounts[idx];
-                                const percent = responseCount > 0 ? Math.round((count / responseCount) * 100) : 0;
-                                const barWidth = responseCount > 0 ? (count / responseCount) * 100 : 0;
-                                const isCorrect = idx === correctAnswer;
-                                
-                                return `
-                                    <div class="answer-stat ${isCorrect ? 'correct-answer' : ''}">
-                                        <div class="answer-label">
-                                            ${String.fromCharCode(65 + idx)}. ${answer}
-                                            ${isCorrect ? '<span class="correct-indicator">✓ Correct</span>' : ''}
-                                        </div>
-                                        <div class="answer-count">
-                                            <div class="answer-bar ${isCorrect ? 'correct' : ''}" style="width: ${barWidth}px;"></div>
-                                            <span class="answer-percent ${isCorrect ? 'correct' : ''}">${count} (${percent}%)</span>
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                        <div class="total-responses">Total responses: ${responseCount}</div>
+                const c1 = countsForRound('round1', n), c2 = countsForRound('round' + rounds, n);
+                const t1 = sum(c1), t2 = sum(c2);
+                const p1 = t1 ? Math.round((c1[correct] || 0) / t1 * 100) : 0;
+                const p2 = t2 ? Math.round((c2[correct] || 0) / t2 * 100) : 0;
+                const flow = correctnessFlow('round1', 'round' + rounds, correct);
+                const gain = `After discussing, <strong>${p2}% chose the correct answer</strong> — ${p2 >= p1 ? 'up from' : 'compared with'} ${p1}% on the first vote.`;
+                body = `<div class="qtext">${esc(q.text)}</div>
+                    <div class="gain">${gain}</div>
+                    <div class="reveal-grid">
+                        <div>${barsHtml(q.answers, c2, correct, c1)}</div>
+                        <div>${flowSvg(flow, rounds)}<div class="flow-title">How the room moved, round 1 → round ${rounds}</div></div>
                     </div>
-                `;
-            });
-            
-            html += '</div>';
-            return html;
+                    <div class="total">${t2} response${t2 === 1 ? '' : 's'}</div>`;
+            }
+            document.getElementById('content').innerHTML = body;
         }
-        
-        // Get leaderboard HTML
-        function getLeaderboardHTML() {
-            // Show all non-anonymous scores
-            const visibleScores = Object.entries(scoresData)
-                .map(([id, data]) => ({ id, ...data }))
-                .filter(score => score.nickname !== 'Anonymous')
-                .sort((a, b) => b.points - a.points);
-            
-            // Get current user's score
-            const currentUserScore = scoresData[sessionId];
-            
-            let html = '<div class="leaderboard-container">';
-            html += '<h2 class="leaderboard-title">🏆 Leaderboard</h2>';
-            
-            // Show current user's position if they have a score
-            if (currentUserScore) {
-                const allScores = Object.entries(scoresData)
-                    .map(([id, data]) => ({ id, ...data }))
-                    .sort((a, b) => b.points - a.points);
-                const position = allScores.findIndex(s => s.id === sessionId) + 1;
-                
-                html += `
-                    <div class="your-position">
-                        <h3>Your Position</h3>
-                        <div class="stats">#${position} - ${currentUserScore.points} points (${currentUserScore.correct}/${currentUserScore.total} correct)</div>
-                        ${currentUserScore.nickname === 'Anonymous' ? '<div style="font-size: 14px; margin-top: 5px;">You are playing anonymously</div>' : ''}
-                    </div>
-                `;
+
+        function render() {
+            const a = (!resultsVisible) ? null : activeQ();
+            manageRespSub(a ? a.id : null);
+            const mode = a ? (a.q.revealed === true ? 'reveal:' + a.id : 'live:' + a.id) : 'join';
+            if (mode === 'join') {
+                if (lastMode === 'join') return;
+                lastMode = 'join';
+                renderJoin();
+                return;
             }
-            
-            if (visibleScores.length === 0) {
-                html += '<div class="no-responses">No named players yet.<br>Anonymous players are not shown on the leaderboard.</div>';
-            } else {
-                // Show top 10 non-anonymous players
-                visibleScores.slice(0, 10).forEach((score, index) => {
-                    const rank = index + 1;
-                    const isCurrentUser = score.id === sessionId;
-                    const accuracy = score.total > 0 ? Math.round((score.correct / score.total) * 100) : 0;
-                    
-                    let rankClass = '';
-                    if (rank === 1) rankClass = 'gold';
-                    else if (rank === 2) rankClass = 'silver';
-                    else if (rank === 3) rankClass = 'bronze';
-                    
-                    html += `
-                        <div class="leaderboard-item ${rank <= 3 ? 'top-3' : ''}" ${isCurrentUser ? 'style="background: #e8e0f0;"' : ''}>
-                            <div class="leaderboard-rank ${rankClass}">${rank}</div>
-                            <div class="leaderboard-name">${score.nickname}${isCurrentUser ? ' (You)' : ''}</div>
-                            <div class="leaderboard-stats">
-                                <div class="leaderboard-points">${score.points} pts</div>
-                                <div class="leaderboard-accuracy">${score.correct}/${score.total} (${accuracy}%)</div>
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                // Count anonymous players
-                const anonymousCount = Object.values(scoresData).filter(s => s.nickname === 'Anonymous').length;
-                if (anonymousCount > 0) {
-                    html += `
-                        <div style="text-align: center; margin-top: 20px; color: #666; font-size: 14px;">
-                            Plus ${anonymousCount} anonymous ${anonymousCount === 1 ? 'player' : 'players'}
-                        </div>
-                    `;
-                }
-            }
-            
-            html += '</div>';
-            return html;
+            lastMode = mode;
+            if (a.q.revealed === true) renderReveal(a.q);
+            else renderLive(a.q);
         }
-        
-        // Show tab
-        window.showTab = function(tabName) {
-            // Update tab buttons
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            // Update tab content
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            
-            if (tabName === 'results') {
-                document.getElementById('resultsTab').classList.add('active');
-            } else if (tabName === 'leaderboard') {
-                document.getElementById('leaderboardTab').classList.add('active');
-            }
-        };
-        
-        // Create chart
-        function createChart(questionId, labels, data, correctAnswer) {
-            const ctx = document.getElementById(`chart-${questionId}`);
-            if (!ctx) return;
-            
-            // Destroy existing chart if any
-            if (charts[questionId]) {
-                charts[questionId].destroy();
-            }
-            
-            // Create labels with letters
-            const chartLabels = labels.map((label, idx) => 
-                `${String.fromCharCode(65 + idx)}. ${label.substring(0, 30)}${label.length > 30 ? '...' : ''}`
-            );
-            
-            // Customize colors - highlight correct answer in green
-            const backgroundColors = labels.map((_, idx) => 
-                idx === correctAnswer ? '#2e7d32' : chartColors[idx % chartColors.length]
-            );
-            
-            const borderColors = backgroundColors.map(color => color + 'dd');
-            
-            charts[questionId] = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: chartLabels,
-                    datasets: [{
-                        label: 'Responses',
-                        data: data,
-                        backgroundColor: backgroundColors,
-                        borderColor: borderColors,
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const value = context.parsed.y;
-                                    const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-                                    const isCorrect = context.dataIndex === correctAnswer;
-                                    return `${value} responses (${percentage}%)${isCorrect ? ' - Correct Answer' : ''}`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1,
-                                precision: 0
-                            },
-                            grid: {
-                                color: '#f0f0f0'
-                            }
-                        },
-                        x: {
-                            grid: {
-                                display: false
-                            },
-                            ticks: {
-                                autoSkip: false,
-                                maxRotation: 45,
-                                minRotation: 0
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        
-        // Initialize the app
-        initializeListeners();
+
+        render();
     </script>
 </body>
 </html>

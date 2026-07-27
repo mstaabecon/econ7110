@@ -3,58 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - ECON7110Live</title>
+    <title>Authoring - ECON7110 Live</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
             background-color: #f5f5f5;
             min-height: 100vh;
         }
-        
         .header {
             background-color: #51247A;
             color: white;
             padding: 20px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        
         .header-content {
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        
-        .nav-links {
-            display: flex;
-            gap: 20px;
-        }
-        
+        .nav-links { display: flex; gap: 12px; }
         .nav-links a {
             color: white;
             text-decoration: none;
-            padding: 8px 16px;
+            padding: 8px 14px;
             border-radius: 4px;
             transition: background-color 0.2s;
         }
-        
-        .nav-links a:hover {
-            background-color: rgba(255,255,255,0.1);
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
+        .nav-links a:hover { background-color: rgba(255,255,255,0.12); }
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
         .auth-container {
             max-width: 400px;
             margin: 100px auto;
@@ -63,13 +42,7 @@
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        
-        .auth-container h2 {
-            color: #51247A;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        
+        .auth-container h2 { color: #51247A; margin-bottom: 20px; text-align: center; }
         .auth-container input {
             width: 100%;
             padding: 10px;
@@ -78,7 +51,6 @@
             border-radius: 4px;
             font-size: 16px;
         }
-        
         .auth-container button {
             width: 100%;
             padding: 12px;
@@ -89,16 +61,8 @@
             font-size: 16px;
             cursor: pointer;
         }
-        
-        .auth-container button:hover {
-            background-color: #3d1b5c;
-        }
-        
-        .auth-container button:disabled {
-            background-color: #999;
-            cursor: not-allowed;
-        }
-        
+        .auth-container button:hover { background-color: #3d1b5c; }
+        .auth-container button:disabled { background-color: #999; cursor: not-allowed; }
         .section {
             background: white;
             padding: 20px;
@@ -106,109 +70,9 @@
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        
-        .section h2 {
-            color: #51247A;
-            margin-bottom: 20px;
-        }
-        
-        .question-item {
-            padding: 15px;
-            margin-bottom: 15px;
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
-            background-color: #fafafa;
-        }
-        
-        .question-item.active {
-            background-color: #f3f0f7;
-            border-color: #51247A;
-        }
-        
-        .question-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .question-text {
-            font-weight: 600;
-            color: #333;
-        }
-        
-        .question-answers {
-            margin-left: 20px;
-            color: #666;
-        }
-        
-        .correct-answer {
-            color: #2e7d32;
-            font-weight: 600;
-        }
-        
-        .question-meta {
-            margin-top: 8px;
-            font-size: 14px;
-            color: #51247A;
-        }
-        
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 24px;
-        }
-        
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 24px;
-        }
-        
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 16px;
-            width: 16px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        
-        input:checked + .slider {
-            background-color: #51247A;
-        }
-        
-        input:checked + .slider:before {
-            transform: translateX(26px);
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #333;
-            font-weight: 500;
-        }
-        
+        .section h2 { color: #51247A; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; color: #333; font-weight: 500; }
         .form-group input, .form-group select {
             width: 100%;
             padding: 8px 12px;
@@ -216,116 +80,65 @@
             border-radius: 4px;
             font-size: 14px;
         }
-        
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-        
-        .answer-inputs {
-            margin-top: 10px;
-        }
-        
-        .answer-input {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-        
-        .answer-input label {
-            width: 30px;
-            font-weight: 600;
-            color: #51247A;
-        }
-        
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+        .answer-inputs { margin-top: 10px; }
+        .answer-input { display: flex; align-items: center; margin-bottom: 8px; }
+        .answer-input label { width: 30px; font-weight: 600; color: #51247A; }
         .answer-input input {
-            flex: 1;
-            padding: 6px 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            flex: 1; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px;
         }
-        
+        .checkbox-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+        .checkbox-row input { width: auto; }
+        .checkbox-row label { font-weight: 400; margin: 0; }
         .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.2s;
+            padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;
+            font-size: 14px; transition: background-color 0.2s;
         }
-        
-        .btn-primary {
-            background-color: #51247A;
-            color: white;
+        .btn-primary { background-color: #51247A; color: white; }
+        .btn-primary:hover { background-color: #3d1b5c; }
+        .btn-secondary { background-color: #e0e0e0; color: #333; }
+        .btn-secondary:hover { background-color: #d0d0d0; }
+        .btn-danger { background-color: #d32f2f; color: white; }
+        .btn-danger:hover { background-color: #b71c1c; }
+        .btn-sm { padding: 5px 12px; font-size: 13px; }
+        .term-bar { display: flex; align-items: flex-end; gap: 12px; }
+        .term-bar .form-group { flex: 1; margin-bottom: 0; }
+        .lecture-group { margin-bottom: 22px; }
+        .lecture-group h3 {
+            color: #51247A; font-size: 15px; margin-bottom: 10px;
+            border-bottom: 1px solid #eee; padding-bottom: 6px;
         }
-        
-        .btn-primary:hover {
-            background-color: #3d1b5c;
+        .question-item {
+            padding: 14px; margin-bottom: 12px; border: 1px solid #e0e0e0;
+            border-radius: 6px; background-color: #fafafa;
         }
-        
-        .btn-secondary {
-            background-color: #e0e0e0;
-            color: #333;
+        .question-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+        .question-text { font-weight: 600; color: #333; margin-bottom: 8px; }
+        .question-answers { margin-left: 4px; color: #666; font-size: 14px; }
+        .correct-answer { color: #2e7d32; font-weight: 600; }
+        .badges { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+        .badge {
+            font-size: 12px; font-weight: 500; padding: 2px 9px; border-radius: 11px;
+            background: #ece6f3; color: #51247A;
         }
-        
-        .btn-secondary:hover {
-            background-color: #d0d0d0;
-        }
-        
-        .btn-danger {
-            background-color: #d32f2f;
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            background-color: #b71c1c;
-        }
-        
-        .qr-section {
-            text-align: center;
-            padding: 20px;
-        }
-        
-        #qrcode {
-            margin: 20px auto;
-        }
-        
-        .url-display {
-            background-color: #f5f5f5;
-            padding: 10px;
-            border-radius: 4px;
-            font-family: monospace;
-            margin-top: 10px;
-            word-break: break-all;
-        }
-        
-        .hidden {
-            display: none;
-        }
-        
+        .badge.muted { background: #eee; color: #777; }
+        .row-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        .notice { color: #b26a00; background: #fff6e6; border: 1px solid #ffe0a3; padding: 12px 14px; border-radius: 6px; margin-bottom: 16px; }
+        .hidden { display: none; }
         .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
+            display: inline-block; width: 20px; height: 20px;
+            border: 3px solid rgba(255,255,255,.3); border-radius: 50%;
+            border-top-color: white; animation: spin 1s ease-in-out infinite;
         }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
     <!-- Login Screen -->
     <div id="loginScreen">
         <div class="header">
-            <div class="header-content">
-                <h1>Admin Panel - ECON7110 Live</h1>
-            </div>
+            <div class="header-content"><h1>Authoring - ECON7110 Live</h1></div>
         </div>
         <div class="auth-container">
             <h2>Admin Login</h2>
@@ -336,126 +149,105 @@
         </div>
     </div>
 
-    <!-- Admin Panel -->
+    <!-- Authoring Panel -->
     <div id="adminPanel" class="hidden">
         <div class="header">
             <div class="header-content">
-                <h1>Admin Panel</h1>
+                <h1>Authoring</h1>
                 <div class="nav-links">
-                    <a href="results.html" target="_blank">View Results</a>
+                    <a href="control.html" target="_blank">Run control</a>
+                    <a href="results.html" target="_blank">Projector</a>
                     <a href="#" onclick="logout()">Logout</a>
                 </div>
             </div>
         </div>
-        
+
         <div class="container">
-            <!-- QR Code Section -->
-            <div class="section qr-section">
-                <h2>Student Access</h2>
-                <p>Students can scan this QR code to access the response system:</p>
-                <div id="qrcode"></div>
-                <div class="url-display" id="urlDisplay"></div>
-            </div>
-            
-            <!-- Add/Edit Questions -->
+            <!-- Current term -->
             <div class="section">
-                <h2>Add New Question</h2>
-                <div class="form-group">
-                    <label>Question Text:</label>
-                    <input type="text" id="questionText" placeholder="Enter your question">
-                </div>
-                <div class="form-row">
+                <h2>Current term</h2>
+                <div class="term-bar">
                     <div class="form-group">
-                        <label>Point Value:</label>
-                        <select id="pointValue">
-                            <option value="1">1 point</option>
-                            <option value="2">2 points</option>
-                            <option value="3">3 points</option>
-                            <option value="4">4 points</option>
-                            <option value="5">5 points</option>
-                        </select>
+                        <label>Term label (questions and responses are filed under this)</label>
+                        <input type="text" id="termInput" placeholder="e.g. 2026-S1">
                     </div>
-                    <div class="form-group">
-                        <label>Correct Answer:</label>
-                        <select id="correctAnswer">
-                            <option value="">Select after adding answers</option>
-                        </select>
-                    </div>
+                    <button class="btn btn-primary" onclick="setTerm()">Set term</button>
                 </div>
-                <div class="answer-inputs">
-                    <div class="answer-input">
-                        <label>A.</label>
-                        <input type="text" id="answer0" placeholder="Answer option A" onkeyup="updateCorrectAnswerOptions()">
-                    </div>
-                    <div class="answer-input">
-                        <label>B.</label>
-                        <input type="text" id="answer1" placeholder="Answer option B" onkeyup="updateCorrectAnswerOptions()">
-                    </div>
-                    <div class="answer-input">
-                        <label>C.</label>
-                        <input type="text" id="answer2" placeholder="Answer option C (optional)" onkeyup="updateCorrectAnswerOptions()">
-                    </div>
-                    <div class="answer-input">
-                        <label>D.</label>
-                        <input type="text" id="answer3" placeholder="Answer option D (optional)" onkeyup="updateCorrectAnswerOptions()">
-                    </div>
-                    <div class="answer-input">
-                        <label>E.</label>
-                        <input type="text" id="answer4" placeholder="Answer option E (optional)" onkeyup="updateCorrectAnswerOptions()">
-                    </div>
-                </div>
-                <button class="btn btn-primary" onclick="addQuestion()">Add Question</button>
+                <p id="termStatus" style="color:#666; font-size:14px; margin-top:10px;"></p>
             </div>
 
+            <!-- Add / edit question -->
             <div class="section">
-                <h2>Settings</h2>
-                <div style="margin-bottom: 20px;">
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="resultsVisibleToggle" onchange="toggleResultsVisibility(this.checked)">
-                        <span class="slider"></span>
-                    </label>
-                    <span>Show results to students</span>
+                <h2 id="formHeading">Add question</h2>
+                <div id="termNotice" class="notice hidden">Set a current term above before adding questions.</div>
+                <div class="form-group">
+                    <label>Question text</label>
+                    <input type="text" id="questionText" placeholder="Enter your question">
                 </div>
-                
-                <div style="margin-bottom: 20px;">
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="leaderboardVisibleToggle" onchange="toggleLeaderboardVisibility(this.checked)">
-                        <span class="slider"></span>
-                    </label>
-                    <span>Show leaderboard to students</span>
+                <div class="form-row-3">
+                    <div class="form-group">
+                        <label>Type (preset)</label>
+                        <select id="qType" onchange="onTypeChange()">
+                            <option value="concept">Concept (discussion + re-vote)</option>
+                            <option value="retrieval">Retrieval (single vote)</option>
+                            <option value="poll">Poll (no correct answer)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Rounds</label>
+                        <input type="number" id="qRounds" min="1" max="5" value="2">
+                    </div>
+                    <div class="form-group">
+                        <label>Lecture</label>
+                        <select id="qLecture" onchange="onLectureChange()"></select>
+                        <input type="text" id="qLectureNew" placeholder="New lecture name" class="hidden" style="margin-top:8px;">
+                    </div>
                 </div>
-                
-                <div style="padding-top: 20px; border-top: 1px solid #e0e0e0;">
-                    <h3 style="color: #d32f2f; margin-bottom: 10px;">Danger Zone</h3>
-                    <button class="btn btn-danger" onclick="clearAllResponses()">
-                        Clear All Responses
-                    </button>
-                    <p style="color: #666; font-size: 14px; margin-top: 10px;">
-                        This will delete all student responses and scores. Questions will remain.
-                    </p>
+                <div class="form-group" id="correctGroup">
+                    <label>Correct answer</label>
+                    <select id="correctAnswer">
+                        <option value="">Select after adding answers</option>
+                    </select>
+                </div>
+                <div class="answer-inputs">
+                    <div class="answer-input"><label>A.</label><input type="text" id="answer0" placeholder="Answer option A" onkeyup="updateCorrectAnswerOptions()"></div>
+                    <div class="answer-input"><label>B.</label><input type="text" id="answer1" placeholder="Answer option B" onkeyup="updateCorrectAnswerOptions()"></div>
+                    <div class="answer-input"><label>C.</label><input type="text" id="answer2" placeholder="Answer option C (optional)" onkeyup="updateCorrectAnswerOptions()"></div>
+                    <div class="answer-input"><label>D.</label><input type="text" id="answer3" placeholder="Answer option D (optional)" onkeyup="updateCorrectAnswerOptions()"></div>
+                    <div class="answer-input"><label>E.</label><input type="text" id="answer4" placeholder="Answer option E (optional)" onkeyup="updateCorrectAnswerOptions()"></div>
+                </div>
+                <div class="checkbox-row" id="showBarsRow">
+                    <input type="checkbox" id="qShowBars">
+                    <label for="qShowBars">Show round-1 bars on the projector by default (you can still flip this live)</label>
+                </div>
+                <div style="margin-top:16px; display:flex; gap:10px;">
+                    <button class="btn btn-primary" id="addBtn" onclick="addOrUpdateQuestion()">Add question</button>
+                    <button class="btn btn-secondary hidden" id="cancelEditBtn" onclick="cancelEdit()">Cancel edit</button>
                 </div>
             </div>
-            
-            <!-- Current Questions -->
+
+            <!-- Question bank -->
             <div class="section">
-                <h2>Current Questions</h2>
-                <div id="questionsList">
-                    <p style="color: #666;">No questions added yet.</p>
-                </div>
+                <h2>Question bank</h2>
+                <div id="questionsList"><p style="color:#666;">No questions yet.</p></div>
+            </div>
+
+            <!-- Danger zone -->
+            <div class="section">
+                <h2 style="color:#d32f2f;">Danger zone</h2>
+                <button class="btn btn-danger" onclick="clearTermResponses()">Clear this term's responses</button>
+                <p style="color:#666; font-size:14px; margin-top:10px;">
+                    Deletes every student response for the current term. Questions are kept.
+                </p>
             </div>
         </div>
     </div>
 
-    <!-- QR Code Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    
-    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js';
-        import { getDatabase, ref, onValue, push, set, remove } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js';
+        import { getDatabase, ref, onValue, get, set, push, remove, update } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js';
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js';
-        
-        // Firebase configuration
+
         const firebaseConfig = {
             apiKey: "AIzaSyBZCW5tAWc-I5XAXqFDRazoeWIhQtNxcu4",
             authDomain: "econ7110.firebaseapp.com",
@@ -465,386 +257,323 @@
             messagingSenderId: "667390196212",
             appId: "1:667390196212:web:59b6cc3983be3a1aa1a1a1"
         };
-        
-        // Initialize Firebase
+
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
         const auth = getAuth(app);
-        
-        // Store auth state
+
         let currentUser = null;
-        
-        // Update correct answer dropdown when answers change
-        window.updateCorrectAnswerOptions = function() {
-            const correctAnswerSelect = document.getElementById('correctAnswer');
-            const currentValue = correctAnswerSelect.value;
-            correctAnswerSelect.innerHTML = '<option value="">Select correct answer</option>';
-            
-            for (let i = 0; i < 5; i++) {
-                const answer = document.getElementById(`answer${i}`).value.trim();
-                if (answer) {
-                    const option = document.createElement('option');
-                    option.value = i;
-                    option.textContent = `${String.fromCharCode(65 + i)}. ${answer}`;
-                    correctAnswerSelect.appendChild(option);
-                }
-            }
-            
-            // Restore previous selection if still valid
-            if (currentValue && document.getElementById(`answer${currentValue}`).value.trim()) {
-                correctAnswerSelect.value = currentValue;
-            }
-        };
-        
-        // Login function with Firebase Auth
+        let currentTerm = null;
+        let editingId = null;
+        let questionsCache = {};
+        let answersCache = {};
+        let unsubQuestions = null;
+        let unsubAnswers = null;
+
+        // ---------- Auth ----------
         window.login = async function() {
             const email = document.getElementById('emailInput').value;
             const password = document.getElementById('passwordInput').value;
-            const loginButton = document.getElementById('loginButton');
-            const loginError = document.getElementById('loginError');
-            
-            // Clear previous errors
-            loginError.textContent = '';
-            
-            // Disable button and show loading
-            loginButton.disabled = true;
-            loginButton.innerHTML = '<span class="loading-spinner"></span> Logging in...';
-            
+            const btn = document.getElementById('loginButton');
+            const err = document.getElementById('loginError');
+            err.textContent = '';
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> Logging in...';
             try {
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                // Login successful - UI will update via onAuthStateChanged
+                await signInWithEmailAndPassword(auth, email, password);
             } catch (error) {
-                // Re-enable button
-                loginButton.disabled = false;
-                loginButton.textContent = 'Login';
-                
-                // Show user-friendly error messages
-                switch(error.code) {
-                    case 'auth/invalid-email':
-                        loginError.textContent = 'Invalid email address';
-                        break;
-                    case 'auth/user-not-found':
-                        loginError.textContent = 'No admin account found with this email';
-                        break;
-                    case 'auth/wrong-password':
-                        loginError.textContent = 'Incorrect password';
-                        break;
-                    case 'auth/invalid-credential':
-                        loginError.textContent = 'Invalid email or password';
-                        break;
-                    case 'auth/too-many-requests':
-                        loginError.textContent = 'Too many failed attempts. Please try again later.';
-                        break;
-                    default:
-                        loginError.textContent = 'Login failed. Please try again.';
-                        console.error('Login error:', error);
-                }
+                btn.disabled = false;
+                btn.textContent = 'Login';
+                const map = {
+                    'auth/invalid-email': 'Invalid email address',
+                    'auth/user-not-found': 'No admin account found with this email',
+                    'auth/wrong-password': 'Incorrect password',
+                    'auth/invalid-credential': 'Invalid email or password',
+                    'auth/too-many-requests': 'Too many failed attempts. Please try again later.'
+                };
+                err.textContent = map[error.code] || 'Login failed. Please try again.';
+                if (!map[error.code]) console.error('Login error:', error);
             }
         };
-        
-        // Logout function
+
         window.logout = function() {
-            signOut(auth).then(() => {
-                // Sign-out successful - UI will update via onAuthStateChanged
-            }).catch((error) => {
-                console.error('Logout error:', error);
-                alert('Error logging out. Please try again.');
-            });
+            signOut(auth).catch((e) => { console.error('Logout error:', e); alert('Error logging out.'); });
         };
-        
-        // Monitor auth state changes
+
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
-            
             if (user) {
-                // User is signed in
-                console.log('Admin logged in:', user.email);
                 document.getElementById('loginScreen').classList.add('hidden');
                 document.getElementById('adminPanel').classList.remove('hidden');
-                loadQuestions();
-                generateQRCode();
-                loadSettings();
+                loadTerm();
             } else {
-                // User is signed out
                 document.getElementById('loginScreen').classList.remove('hidden');
                 document.getElementById('adminPanel').classList.add('hidden');
-                // Reset login button if it was in loading state
-                const loginButton = document.getElementById('loginButton');
-                loginButton.disabled = false;
-                loginButton.textContent = 'Login';
+                const btn = document.getElementById('loginButton');
+                btn.disabled = false;
+                btn.textContent = 'Login';
             }
         });
 
-        // Toggle results visibility
-        window.toggleResultsVisibility = function(visible) {
-            if (!currentUser) {
-                alert('You must be logged in to change settings');
-                return;
-            }
-            
-            const settingsRef = ref(database, 'settings/resultsVisible');
-            set(settingsRef, visible).then(() => {
-                console.log('Results visibility set to:', visible);
-            }).catch(error => {
-                console.error('Error setting visibility:', error);
-                alert('Error updating settings: ' + error.message);
-            });
-        };
-
-        // Toggle leaderboard visibility
-        window.toggleLeaderboardVisibility = function(visible) {
-            if (!currentUser) {
-                alert('You must be logged in to change settings');
-                return;
-            }
-            
-            const settingsRef = ref(database, 'settings/leaderboardVisible');
-            set(settingsRef, visible).then(() => {
-                console.log('Leaderboard visibility set to:', visible);
-            }).catch(error => {
-                console.error('Error setting visibility:', error);
-                alert('Error updating settings: ' + error.message);
-            });
-        };
-
-        // initialize the toggles when admin loads
-        function loadSettings() {
-            const resultsRef = ref(database, 'settings/resultsVisible');
-            onValue(resultsRef, (snapshot) => {
-                const isVisible = snapshot.val();
-                document.getElementById('resultsVisibleToggle').checked = isVisible === true;
-            });
-            
-            const leaderboardRef = ref(database, 'settings/leaderboardVisible');
-            onValue(leaderboardRef, (snapshot) => {
-                const isVisible = snapshot.val();
-                document.getElementById('leaderboardVisibleToggle').checked = isVisible === true;
-            });
-        }
-
-        // Clear all responses
-        window.clearAllResponses = function() {
-            if (!currentUser) {
-                alert('You must be logged in to clear responses');
-                return;
-            }
-            
-            if (confirm('Clear all student responses and scores? This cannot be undone.')) {
-                const responsesRef = ref(database, 'responses');
-                const scoresRef = ref(database, 'currentSession/scores');
-                
-                Promise.all([
-                    set(responsesRef, null),
-                    set(scoresRef, null)
-                ])
-                .then(() => {
-                    alert('All responses and scores cleared!');
-                })
-                .catch(error => {
-                    console.error('Error clearing data:', error);
-                    alert('Error clearing data: ' + error.message);
-                });
-            }
-        };
-        
-        // Generate QR Code
-        function generateQRCode() {
-            // Get the current URL and replace admin.html with index.html
-            const currentUrl = window.location.href;
-            const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/'));
-            const studentUrl = baseUrl + '/index.html';
-            
-            document.getElementById('urlDisplay').textContent = studentUrl;
-            
-            // Clear any existing QR code first
-            document.getElementById("qrcode").innerHTML = '';
-            
-            new QRCode(document.getElementById("qrcode"), {
-                text: studentUrl,
-                width: 200,
-                height: 200,
-                colorDark: "#51247A",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
-            });
-        }
-        
-        // Add question
-        window.addQuestion = function() {
-            if (!currentUser) {
-                alert('You must be logged in to add questions');
-                return;
-            }
-            
-            const questionText = document.getElementById('questionText').value.trim();
-            const answers = [];
-            const pointValue = parseInt(document.getElementById('pointValue').value);
-            const correctAnswer = document.getElementById('correctAnswer').value;
-            
-            for (let i = 0; i < 5; i++) {
-                const answer = document.getElementById(`answer${i}`).value.trim();
-                if (answer) {
-                    answers.push(answer);
+        // ---------- Term ----------
+        function loadTerm() {
+            onValue(ref(database, 'settings/currentTerm'), (snap) => {
+                currentTerm = snap.val();
+                const status = document.getElementById('termStatus');
+                const notice = document.getElementById('termNotice');
+                if (currentTerm) {
+                    document.getElementById('termInput').value = currentTerm;
+                    status.textContent = 'Active term: ' + currentTerm;
+                    notice.classList.add('hidden');
+                } else {
+                    status.textContent = 'No term set yet.';
+                    notice.classList.remove('hidden');
                 }
-            }
-            
-            if (!questionText) {
-                alert('Please enter a question');
-                return;
-            }
-            
-            if (answers.length < 2) {
-                alert('Please provide at least 2 answer options');
-                return;
-            }
-            
-            if (correctAnswer === '') {
-                alert('Please select the correct answer');
-                return;
-            }
-            
-            // Check if correct answer index is valid
-            const correctIndex = parseInt(correctAnswer);
-            if (correctIndex >= answers.length) {
-                alert('Invalid correct answer selection');
-                return;
-            }
-            
-            // Check total questions
-            const questionsRef = ref(database, 'questions');
-            onValue(questionsRef, (snapshot) => {
-                const existingQuestions = snapshot.val() || {};
-                if (Object.keys(existingQuestions).length >= 5) {
-                    alert('Maximum 5 questions allowed. Please delete a question first.');
-                    return;
-                }
-                
-                // Add the question
-                const newQuestionRef = push(questionsRef);
-                set(newQuestionRef, {
-                    text: questionText,
-                    answers: answers,
-                    points: pointValue,
-                    correctAnswer: correctIndex,
-                    active: true,
-                    createdAt: Date.now()
-                }).then(() => {
-                    // Clear form
-                    document.getElementById('questionText').value = '';
-                    document.getElementById('pointValue').value = '1';
-                    document.getElementById('correctAnswer').innerHTML = '<option value="">Select after adding answers</option>';
-                    for (let i = 0; i < 5; i++) {
-                        document.getElementById(`answer${i}`).value = '';
-                    }
-                    alert('Question added successfully!');
-                }).catch(error => {
-                    alert('Error adding question: ' + error.message);
-                });
-            }, { onlyOnce: true });
-        };
-        
-        // Load questions
-        function loadQuestions() {
-            const questionsRef = ref(database, 'questions');
-            onValue(questionsRef, (snapshot) => {
-                const questions = snapshot.val() || {};
-                displayQuestions(questions);
+                loadTermData();
             });
         }
-        
-        // Display questions
-        function displayQuestions(questions) {
-            const listDiv = document.getElementById('questionsList');
-            
-            if (Object.keys(questions).length === 0) {
-                listDiv.innerHTML = '<p style="color: #666;">No questions added yet.</p>';
-                return;
-            }
-            
+
+        window.setTerm = function() {
+            if (!currentUser) return;
+            const t = document.getElementById('termInput').value.trim();
+            if (!t) { alert('Enter a term label.'); return; }
+            set(ref(database, 'settings/currentTerm'), t)
+                .catch(e => alert('Error setting term: ' + e.message));
+        };
+
+        function loadTermData() {
+            if (unsubQuestions) { unsubQuestions(); unsubQuestions = null; }
+            if (unsubAnswers) { unsubAnswers(); unsubAnswers = null; }
+            questionsCache = {};
+            answersCache = {};
+            if (!currentTerm) { displayQuestions(); refreshLectureOptions(); return; }
+            unsubQuestions = onValue(ref(database, `terms/${currentTerm}/questions`), (snap) => {
+                questionsCache = snap.val() || {};
+                displayQuestions();
+                refreshLectureOptions();
+            });
+            unsubAnswers = onValue(ref(database, `terms/${currentTerm}/answers`), (snap) => {
+                answersCache = snap.val() || {};
+                displayQuestions();
+            });
+        }
+
+        // ---------- Form helpers ----------
+        function applyTypeVisibility(type) {
+            document.getElementById('correctGroup').classList.toggle('hidden', type === 'poll');
+            document.getElementById('showBarsRow').classList.toggle('hidden', type !== 'concept');
+        }
+        window.onTypeChange = function() {
+            const type = document.getElementById('qType').value;
+            document.getElementById('qRounds').value = (type === 'concept') ? 2 : 1;
+            applyTypeVisibility(type);
+        };
+
+        window.onLectureChange = function() {
+            const sel = document.getElementById('qLecture').value;
+            const newInput = document.getElementById('qLectureNew');
+            if (sel === '__new__') newInput.classList.remove('hidden');
+            else newInput.classList.add('hidden');
+        };
+
+        function refreshLectureOptions() {
+            const sel = document.getElementById('qLecture');
+            const prev = sel.value;
+            const labels = [...new Set(Object.values(questionsCache).map(q => q.lecture).filter(Boolean))].sort();
             let html = '';
-            Object.entries(questions).forEach(([id, question]) => {
-                const points = question.points || 1;
-                const correctAnswer = question.correctAnswer;
-                
-                html += `
-                    <div class="question-item ${question.active ? 'active' : ''}">
-                        <div class="question-header">
-                            <div style="flex: 1;">
-                                <div class="question-text">${question.text}</div>
-                                <div class="question-answers">
-                                    ${question.answers.map((ans, idx) => {
-                                        const isCorrect = idx === correctAnswer;
-                                        return `<span class="${isCorrect ? 'correct-answer' : ''}">${String.fromCharCode(65 + idx)}. ${ans}${isCorrect ? ' ✓' : ''}</span>`;
-                                    }).join(' | ')}
-                                </div>
-                                <div class="question-meta">
-                                    Points: ${points} | Correct: ${String.fromCharCode(65 + correctAnswer)}
-                                </div>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <label class="toggle-switch">
-                                    <input type="checkbox" ${question.active ? 'checked' : ''} 
-                                           onchange="toggleQuestion('${id}', this.checked)">
-                                    <span class="slider"></span>
-                                </label>
-                                <button class="btn btn-danger" onclick="deleteQuestion('${id}')">Delete</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            listDiv.innerHTML = html;
+            labels.forEach(l => { html += `<option value="${escAttr(l)}">${escHtml(l)}</option>`; });
+            html += '<option value="__new__">+ New lecture…</option>';
+            sel.innerHTML = html;
+            if (prev && (labels.includes(prev) || prev === '__new__')) sel.value = prev;
+            onLectureChange();
         }
-        
-        // Toggle question active status
-        window.toggleQuestion = function(questionId, active) {
-            if (!currentUser) {
-                alert('You must be logged in to modify questions');
-                return;
+
+        window.updateCorrectAnswerOptions = function() {
+            const sel = document.getElementById('correctAnswer');
+            const prev = sel.value;
+            sel.innerHTML = '<option value="">Select correct answer</option>';
+            for (let i = 0; i < 5; i++) {
+                const a = document.getElementById('answer' + i).value.trim();
+                if (a) {
+                    const o = document.createElement('option');
+                    o.value = i;
+                    o.textContent = String.fromCharCode(65 + i) + '. ' + a;
+                    sel.appendChild(o);
+                }
             }
-            
-            const questionRef = ref(database, `questions/${questionId}/active`);
-            set(questionRef, active).catch(error => {
-                alert('Error updating question: ' + error.message);
+            if (prev && document.getElementById('answer' + prev) && document.getElementById('answer' + prev).value.trim()) sel.value = prev;
+        };
+
+        function currentLecture() {
+            const sel = document.getElementById('qLecture').value;
+            if (sel === '__new__') return document.getElementById('qLectureNew').value.trim();
+            return sel;
+        }
+
+        // ---------- Add / update ----------
+        window.addOrUpdateQuestion = function() {
+            if (!currentUser) { alert('You must be logged in.'); return; }
+            if (!currentTerm) { alert('Set a current term first.'); return; }
+
+            const text = document.getElementById('questionText').value.trim();
+            const type = document.getElementById('qType').value;
+            const rounds = parseInt(document.getElementById('qRounds').value, 10);
+            const lecture = currentLecture();
+            const showRound1Bars = document.getElementById('qShowBars').checked;
+            const isPoll = (type === 'poll');
+            const correctVal = document.getElementById('correctAnswer').value;
+
+            const answers = [];
+            for (let i = 0; i < 5; i++) {
+                const a = document.getElementById('answer' + i).value.trim();
+                if (a) answers.push(a);
+            }
+
+            if (!text) { alert('Enter a question.'); return; }
+            if (answers.length < 2) { alert('Provide at least 2 answer options.'); return; }
+            if (!isPoll && correctVal === '') { alert('Select the correct answer.'); return; }
+            if (!rounds || rounds < 1) { alert('Rounds must be at least 1.'); return; }
+            if (!lecture) { alert('Choose or name a lecture.'); return; }
+            const correctIndex = isPoll ? null : parseInt(correctVal, 10);
+            if (!isPoll && correctIndex >= answers.length) { alert('Correct answer is not one of the options.'); return; }
+
+            const targetId = editingId || push(ref(database, `terms/${currentTerm}/questions`)).key;
+            const answerWrite = set(ref(database, `terms/${currentTerm}/answers/${targetId}`), isPoll ? null : correctIndex);
+            let questionWrite;
+            if (editingId) {
+                questionWrite = update(ref(database, `terms/${currentTerm}/questions/${editingId}`), { text, answers, type, rounds, lecture, showRound1Bars });
+            } else {
+                questionWrite = set(ref(database, `terms/${currentTerm}/questions/${targetId}`), {
+                    text, answers, type, rounds, lecture, showRound1Bars,
+                    active: false, round: 1, open: false, createdAt: Date.now()
+                });
+            }
+            Promise.all([questionWrite, answerWrite])
+                .then(() => { resetForm(); })
+                .catch(e => alert('Error saving: ' + e.message));
+        };
+
+        window.editQuestion = function(id) {
+            const q = questionsCache[id];
+            if (!q) return;
+            editingId = id;
+            document.getElementById('formHeading').textContent = 'Edit question';
+            document.getElementById('addBtn').textContent = 'Update question';
+            document.getElementById('cancelEditBtn').classList.remove('hidden');
+            document.getElementById('questionText').value = q.text || '';
+            document.getElementById('qType').value = q.type || 'concept';
+            document.getElementById('qRounds').value = q.rounds || (q.type === 'concept' ? 2 : 1);
+            applyTypeVisibility(q.type || 'concept');
+            document.getElementById('qShowBars').checked = !!q.showRound1Bars;
+            for (let i = 0; i < 5; i++) document.getElementById('answer' + i).value = (q.answers && q.answers[i]) ? q.answers[i] : '';
+            // lecture
+            refreshLectureOptions();
+            const sel = document.getElementById('qLecture');
+            if (q.lecture && [...sel.options].some(o => o.value === q.lecture)) {
+                sel.value = q.lecture;
+                document.getElementById('qLectureNew').classList.add('hidden');
+            } else if (q.lecture) {
+                sel.value = '__new__';
+                const ni = document.getElementById('qLectureNew');
+                ni.classList.remove('hidden');
+                ni.value = q.lecture;
+            }
+            updateCorrectAnswerOptions();
+            const ci = (answersCache[id] !== undefined) ? answersCache[id] : q.correctAnswer;
+            if (ci !== undefined && ci !== null) document.getElementById('correctAnswer').value = ci;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.cancelEdit = function() { resetForm(); };
+
+        function resetForm() {
+            editingId = null;
+            document.getElementById('formHeading').textContent = 'Add question';
+            document.getElementById('addBtn').textContent = 'Add question';
+            document.getElementById('cancelEditBtn').classList.add('hidden');
+            document.getElementById('questionText').value = '';
+            document.getElementById('qType').value = 'concept';
+            document.getElementById('qRounds').value = 2;
+            document.getElementById('qShowBars').checked = false;
+            for (let i = 0; i < 5; i++) document.getElementById('answer' + i).value = '';
+            document.getElementById('correctAnswer').innerHTML = '<option value="">Select after adding answers</option>';
+            document.getElementById('qLectureNew').value = '';
+            applyTypeVisibility('concept');
+            refreshLectureOptions();
+        }
+
+        window.deleteQuestion = function(id) {
+            if (!currentUser || !currentTerm) return;
+            if (!confirm('Delete this question and its responses? This cannot be undone.')) return;
+            remove(ref(database, `terms/${currentTerm}/questions/${id}`)).catch(e => alert('Error: ' + e.message));
+            remove(ref(database, `terms/${currentTerm}/answers/${id}`)).catch(() => {});
+            remove(ref(database, `terms/${currentTerm}/responses/${id}`)).catch(() => {});
+        };
+
+        window.clearTermResponses = function() {
+            if (!currentUser || !currentTerm) return;
+            if (!confirm("Clear all student responses for term '" + currentTerm + "'? Questions are kept.")) return;
+            set(ref(database, `terms/${currentTerm}/responses`), null)
+                .then(() => alert('Responses cleared for ' + currentTerm + '.'))
+                .catch(e => alert('Error: ' + e.message));
+        };
+
+        // ---------- Display ----------
+        function displayQuestions() {
+            const wrap = document.getElementById('questionsList');
+            const ids = Object.keys(questionsCache);
+            if (ids.length === 0) { wrap.innerHTML = '<p style="color:#666;">No questions yet.</p>'; return; }
+
+            const byLecture = {};
+            ids.forEach(id => {
+                const q = questionsCache[id];
+                const lec = q.lecture || 'Unfiled';
+                (byLecture[lec] = byLecture[lec] || []).push({ id, q });
             });
-        };
-        
-        // Delete question
-        window.deleteQuestion = function(questionId) {
-            if (!currentUser) {
-                alert('You must be logged in to delete questions');
-                return;
-            }
-            
-            if (confirm('Are you sure you want to delete this question? This will also delete all responses.')) {
-                // Delete question
-                const questionRef = ref(database, `questions/${questionId}`);
-                remove(questionRef).catch(error => {
-                    alert('Error deleting question: ' + error.message);
-                });
-                
-                // Delete responses
-                const responsesRef = ref(database, `responses/${questionId}`);
-                remove(responsesRef).catch(error => {
-                    console.error('Error deleting responses:', error);
-                });
-            }
-        };
-        
-        // Enter key submits login
-        document.getElementById('passwordInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                login();
-            }
-        });
-        
-        // Also allow Enter on email field
-        document.getElementById('emailInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                login();
-            }
-        });
+
+            let html = '';
+            Object.keys(byLecture).sort().forEach(lec => {
+                html += `<div class="lecture-group"><h3>${escHtml(lec)}</h3>`;
+                byLecture[lec]
+                    .sort((a, b) => (a.q.createdAt || 0) - (b.q.createdAt || 0))
+                    .forEach(({ id, q }) => {
+                        const ci = (answersCache[id] !== undefined) ? answersCache[id] : q.correctAnswer;
+                        const answers = (q.answers || []).map((ans, idx) => {
+                            const ok = idx === ci;
+                            return `<span class="${ok ? 'correct-answer' : ''}">${String.fromCharCode(65 + idx)}. ${escHtml(ans)}${ok ? ' ✓' : ''}</span>`;
+                        }).join(' &nbsp;|&nbsp; ');
+                        const typeLabel = q.type === 'retrieval' ? 'Retrieval' : (q.type === 'poll' ? 'Poll' : 'Concept');
+                        const barsLabel = q.showRound1Bars ? 'bars: on' : 'bars: off';
+                        html += `
+                            <div class="question-item">
+                                <div class="question-header">
+                                    <div style="flex:1;">
+                                        <div class="question-text">${escHtml(q.text || '')}</div>
+                                        <div class="question-answers">${answers}</div>
+                                        <div class="badges">
+                                            <span class="badge">${typeLabel}</span>
+                                            <span class="badge">${q.rounds || 1} round${(q.rounds || 1) === 1 ? '' : 's'}</span>
+                                            <span class="badge muted">${barsLabel}</span>
+                                        </div>
+                                    </div>
+                                    <div class="row-actions">
+                                        <button class="btn btn-secondary btn-sm" onclick="editQuestion('${id}')">Edit</button>
+                                        <button class="btn btn-danger btn-sm" onclick="deleteQuestion('${id}')">Delete</button>
+                                    </div>
+                                </div>
+                            </div>`;
+                    });
+                html += '</div>';
+            });
+            wrap.innerHTML = html;
+        }
+
+        function escHtml(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+        function escAttr(s) { return escHtml(s).replace(/'/g, '&#39;'); }
+
+        // Enter submits login
+        document.getElementById('passwordInput').addEventListener('keypress', e => { if (e.key === 'Enter') login(); });
+        document.getElementById('emailInput').addEventListener('keypress', e => { if (e.key === 'Enter') login(); });
     </script>
 </body>
 </html>
