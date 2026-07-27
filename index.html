@@ -14,8 +14,6 @@
             background-color: #51247A; color: white; padding: 20px; text-align: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .nickname-bar { background-color: #3d1b5c; color: white; padding: 10px; text-align: center; font-size: 14px; }
-        .nickname-text { font-size: 16px; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; flex: 1; width: 100%; }
         .banner { display: flex; align-items: center; gap: 8px; color: #51247A; font-size: 14px; font-weight: 500; margin-bottom: 14px; }
         .question-card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -49,38 +47,12 @@
         .discuss-banner svg { flex-shrink:0; }
         .discuss-banner .t { font-size:18px; font-weight:600; }
         .discuss-banner .s { font-size:14px; opacity:0.93; margin-top:2px; line-height:1.4; }
-        .welcome-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .welcome-content { background: white; padding: 30px; border-radius: 12px; max-width: 400px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
-        .welcome-content h2 { color: #51247A; margin-bottom: 20px; }
-        .assigned-name { font-size: 24px; font-weight: bold; color: #51247A; margin: 20px 0; padding: 15px; background: #f8f6fb; border-radius: 8px; }
-        .welcome-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
-        .welcome-buttons button { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; }
-        .btn-accept { background-color: #51247A; color: white; }
-        .btn-new { background-color: #e0e0e0; color: #333; }
-        .btn-new:disabled { opacity: 0.5; cursor: not-allowed; }
-        .hidden { display: none; }
     </style>
 </head>
 <body>
     <div class="header"><h1>ECON7110 Live</h1></div>
-    <div class="nickname-bar">
-        <span class="nickname-text">Playing as <strong id="currentNickname">Loading...</strong></span>
-    </div>
     <div class="container">
         <div id="content"><div class="message">Loading…</div></div>
-    </div>
-
-    <div id="welcomeModal" class="welcome-modal hidden">
-        <div class="welcome-content">
-            <h2>Welcome to the quiz</h2>
-            <p>Your randomly assigned name is:</p>
-            <div class="assigned-name" id="assignedName"></div>
-            <div class="welcome-buttons">
-                <button class="btn-accept" onclick="acceptName()">Use this name</button>
-                <button class="btn-new" id="newNameBtn" onclick="generateNewName()">Try another</button>
-            </div>
-            <p style="margin-top: 15px; font-size: 14px; color: #666;">You stay anonymous — this name is just for you.</p>
-        </div>
     </div>
 
     <script type="module">
@@ -99,12 +71,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        const adjectives = ['Clever','Bright','Swift','Wise','Happy','Lucky','Brave','Cool','Keen','Bold','Calm','Eager','Mighty','Noble','Speedy','Crafty'];
-        const animals = ['Panda','Eagle','Dolphin','Owl','Tiger','Koala','Falcon','Wolf','Otter','Lynx','Quokka','Wombat','Echidna','Platypus','Dingo','Kookaburra'];
-
         let sessionId = localStorage.getItem('sessionId');
-        let nickname = localStorage.getItem('nickname');
-        let hasGeneratedNewName = localStorage.getItem('hasGeneratedNewName') === 'true';
         if (!sessionId) {
             sessionId = 'student_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             localStorage.setItem('sessionId', sessionId);
@@ -117,34 +84,6 @@
         let mySelection = null;
         let myAnswers = {};        // { round1: idx, round2: idx, ... } for the active question
         let unsubQuestions = null;
-
-        function randomName() {
-            const a = adjectives[Math.floor(Math.random() * adjectives.length)];
-            const an = animals[Math.floor(Math.random() * animals.length)];
-            return a + an + Math.floor(Math.random() * 100);
-        }
-        function initNickname() {
-            if (!nickname) {
-                document.getElementById('assignedName').textContent = randomName();
-                document.getElementById('welcomeModal').classList.remove('hidden');
-            } else {
-                document.getElementById('currentNickname').textContent = nickname;
-            }
-        }
-        window.acceptName = function() {
-            nickname = document.getElementById('assignedName').textContent;
-            localStorage.setItem('nickname', nickname);
-            document.getElementById('welcomeModal').classList.add('hidden');
-            document.getElementById('currentNickname').textContent = nickname;
-        };
-        window.generateNewName = function() {
-            if (hasGeneratedNewName) return;
-            document.getElementById('assignedName').textContent = randomName();
-            hasGeneratedNewName = true;
-            localStorage.setItem('hasGeneratedNewName', 'true');
-            const b = document.getElementById('newNameBtn');
-            b.disabled = true; b.textContent = 'Try another (used)';
-        };
 
         // ---------- Data ----------
         onValue(ref(db, 'settings/currentTerm'), (snap) => {
@@ -287,7 +226,6 @@
 
         function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 
-        initNickname();
         render();
     </script>
 </body>
