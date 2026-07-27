@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control - ECON7110 Live</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            color: #333;
+        }
+        .header {
+            background-color: #51247A;
+            color: white;
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .header h1 { font-size: 18px; font-weight: 500; }
+        .header .term { font-size: 12.5px; opacity: 0.85; }
+        .nav-links { display: flex; gap: 10px; }
+        .nav-links a { color: white; text-decoration: none; font-size: 13px; padding: 4px 8px; border-radius: 4px; }
+        .nav-links a:hover { background-color: rgba(255,255,255,0.12); }
+        .auth-container {
+            max-width: 400px; margin: 90px auto; background: white; padding: 30px;
+            border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .auth-container h2 { color: #51247A; margin-bottom: 20px; text-align: center; }
+        .auth-container input {
+            width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd;
+            border-radius: 4px; font-size: 16px;
+        }
+        .auth-container button {
+            width: 100%; padding: 12px; background-color: #51247A; color: white;
+            border: none; border-radius: 4px; font-size: 16px; cursor: pointer;
+        }
+        .auth-container button:disabled { background-color: #999; cursor: not-allowed; }
+        .wrap { max-width: 540px; margin: 0 auto; padding: 14px; }
+        .card { background: white; border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .row-between { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .label-sm { font-size: 11.5px; color: #999; margin-bottom: 8px; }
+        .sw { width: 44px; height: 26px; border-radius: 13px; background: #ccc; position: relative; cursor: pointer; flex-shrink: 0; }
+        .sw.on { background: #51247A; }
+        .sw .kn { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: left .15s; }
+        .sw.on .kn { left: 21px; }
+        .qrow {
+            display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+            padding: 12px 13px; margin-bottom: 8px; border: 1px solid #e2e2e2; border-radius: 8px;
+            background: #fff; cursor: pointer; font-family: inherit;
+        }
+        .qrow.act { border: 2px solid #51247A; background: #f7f4fb; }
+        .bdg { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #fff; flex-shrink: 0; }
+        .qtxt { flex: 1; font-size: 14px; color: #333; line-height: 1.3; }
+        .qlec { font-size: 11px; color: #999; }
+        .pill { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 11px; white-space: nowrap; }
+        .pill.live { background: #ecdcff; color: #51247A; }
+        .pill.discuss { background: #fff0d6; color: #9a6300; }
+        .pill.revealed { background: #d4f4dd; color: #2e7d32; }
+        .pill.done { background: #eee; color: #888; }
+        .pill.queued { background: #f3f3f3; color: #aaa; }
+        .panel-status { font-size: 14px; color: #51247A; font-weight: 600; }
+        .count-pill { font-size: 12.5px; font-weight: 600; padding: 3px 10px; border-radius: 11px; background: #ecdcff; color: #51247A; }
+        .proj-line { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: #999; margin: 12px 0; }
+        .bars-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #eee; border-bottom: 1px solid #eee; margin: 12px 0; }
+        .prim { width: 100%; padding: 15px; border: none; border-radius: 8px; background: #51247A; color: #fff; font-size: 16px; font-weight: 500; cursor: pointer; font-family: inherit; }
+        .prim.finish { background: #555; }
+        .muted { color: #888; font-size: 14px; text-align: center; padding: 20px 0; }
+        .notice { color: #b26a00; background: #fff6e6; border: 1px solid #ffe0a3; padding: 12px 14px; border-radius: 8px; margin-bottom: 14px; }
+        .hidden { display: none; }
+        .loading-spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: white; animation: spin 1s ease-in-out infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <!-- Login -->
+    <div id="loginScreen">
+        <div class="header"><h1>Control - ECON7110 Live</h1></div>
+        <div class="auth-container">
+            <h2>Admin login</h2>
+            <input type="email" id="emailInput" placeholder="Admin email" value="admin@econ7110.uq.edu.au">
+            <input type="password" id="passwordInput" placeholder="Enter password">
+            <button id="loginButton" onclick="login()">Login</button>
+            <div id="loginError" style="color: red; margin-top: 10px; text-align: center;"></div>
+        </div>
+    </div>
+
+    <!-- Control -->
+    <div id="controlPanel" class="hidden">
+        <div class="header">
+            <div>
+                <h1>Control</h1>
+                <div class="term" id="termLabel"></div>
+            </div>
+            <div class="nav-links">
+                <a href="admin.html">Author</a>
+                <a href="results.html" target="_blank">Projector</a>
+                <a href="#" onclick="logout()">Logout</a>
+            </div>
+        </div>
+
+        <div class="wrap">
+            <div id="termNotice" class="notice hidden">No term is set. Open Author and set a current term first.</div>
+
+            <div class="card">
+                <div class="row-between">
+                    <div>
+                        <div style="font-size:15px; font-weight:500;">Projector display</div>
+                        <div style="font-size:12.5px; color:#888;" id="projMasterHint">When off, the projector shows the join screen.</div>
+                    </div>
+                    <div class="sw" id="projSwitch" onclick="toggleProjector()"><span class="kn"></span></div>
+                </div>
+            </div>
+
+            <div id="activePanel"></div>
+
+            <div class="card">
+                <div class="label-sm">This term's questions</div>
+                <div id="questionsList"><p class="muted">No questions yet.</p></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js';
+        import { getDatabase, ref, onValue, set, update } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js';
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBZCW5tAWc-I5XAXqFDRazoeWIhQtNxcu4",
+            authDomain: "econ7110.firebaseapp.com",
+            databaseURL: "https://econ7110-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "econ7110",
+            storageBucket: "econ7110.firebasestorage.app",
+            messagingSenderId: "667390196212",
+            appId: "1:667390196212:web:59b6cc3983be3a1aa1a1a1"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const auth = getAuth(app);
+
+        let currentUser = null;
+        let currentTerm = null;
+        let questionsCache = {};
+        let answersCache = {};
+        let resultsVisible = false;
+        let respCounts = {};
+        let respSubId = null;
+        let unsubResp = null;
+        let unsubQ = null, unsubA = null;
+
+        // ---------- Auth ----------
+        window.login = async function() {
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+            const btn = document.getElementById('loginButton');
+            const err = document.getElementById('loginError');
+            err.textContent = '';
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> Logging in...';
+            try { await signInWithEmailAndPassword(auth, email, password); }
+            catch (error) {
+                btn.disabled = false; btn.textContent = 'Login';
+                const map = {
+                    'auth/invalid-email': 'Invalid email address',
+                    'auth/wrong-password': 'Incorrect password',
+                    'auth/invalid-credential': 'Invalid email or password',
+                    'auth/too-many-requests': 'Too many failed attempts. Try again later.'
+                };
+                err.textContent = map[error.code] || 'Login failed. Please try again.';
+            }
+        };
+        window.logout = function() { signOut(auth).catch(() => alert('Error logging out.')); };
+
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if (user) {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('controlPanel').classList.remove('hidden');
+                start();
+            } else {
+                document.getElementById('loginScreen').classList.remove('hidden');
+                document.getElementById('controlPanel').classList.add('hidden');
+                const btn = document.getElementById('loginButton');
+                btn.disabled = false; btn.textContent = 'Login';
+            }
+        });
+
+        function start() {
+            onValue(ref(db, 'settings/currentTerm'), (snap) => {
+                currentTerm = snap.val();
+                document.getElementById('termLabel').textContent = currentTerm ? ('Term ' + currentTerm) : '';
+                document.getElementById('termNotice').classList.toggle('hidden', !!currentTerm);
+                loadTermData();
+            });
+            onValue(ref(db, 'settings/resultsVisible'), (snap) => {
+                resultsVisible = snap.val() === true;
+                document.getElementById('projSwitch').classList.toggle('on', resultsVisible);
+                renderActive();
+            });
+        }
+
+        function loadTermData() {
+            if (unsubQ) { unsubQ(); unsubQ = null; }
+            if (unsubA) { unsubA(); unsubA = null; }
+            questionsCache = {}; answersCache = {};
+            if (!currentTerm) { renderAll(); return; }
+            unsubQ = onValue(ref(db, `terms/${currentTerm}/questions`), (snap) => { questionsCache = snap.val() || {}; renderAll(); });
+            unsubA = onValue(ref(db, `terms/${currentTerm}/answers`), (snap) => { answersCache = snap.val() || {}; renderAll(); });
+        }
+
+        // ---------- Helpers ----------
+        function activeId() {
+            const ids = Object.keys(questionsCache).filter(id => questionsCache[id].active);
+            return ids.length ? ids[0] : null;
+        }
+        function isRevealed(q) { return q && q.revealed === true; }
+
+        window.toggleProjector = function() {
+            if (!currentUser) return;
+            set(ref(db, 'settings/resultsVisible'), !resultsVisible).catch(e => alert('Error: ' + e.message));
+        };
+
+        window.activateQuestion = function(id) {
+            if (!currentUser || !currentTerm) return;
+            const updates = {};
+            Object.keys(questionsCache).forEach(qid => {
+                const base = `terms/${currentTerm}/questions/${qid}`;
+                if (qid === id) {
+                    updates[`${base}/active`] = true;
+                    updates[`${base}/round`] = 1;
+                    updates[`${base}/open`] = true;
+                    updates[`${base}/revealed`] = null;
+                    updates[`${base}/revealedCorrect`] = null;
+                } else if (questionsCache[qid].active) {
+                    updates[`${base}/active`] = false;
+                    updates[`${base}/open`] = false;
+                }
+            });
+            update(ref(db), updates).catch(e => alert('Error: ' + e.message));
+        };
+
+        window.advance = function() {
+            if (!currentUser || !currentTerm) return;
+            const id = activeId();
+            if (!id) return;
+            const q = questionsCache[id];
+            const rounds = q.rounds || 1;
+            const round = q.round || 1;
+            const open = !!q.open;
+            const path = `terms/${currentTerm}/questions/${id}`;
+            if (isRevealed(q)) { update(ref(db, path), { active: false }).catch(e => alert(e.message)); return; }
+            if (open) {
+                if (round < rounds) update(ref(db, path), { open: false }).catch(e => alert(e.message));
+                else reveal(id, q, path);
+            } else {
+                if (round < rounds) update(ref(db, path), { round: round + 1, open: true }).catch(e => alert(e.message));
+                else reveal(id, q, path);
+            }
+        };
+
+        function reveal(id, q, path) {
+            if (q.type === 'poll') {
+                update(ref(db, path), { open: false, revealed: true }).catch(e => alert(e.message));
+                return;
+            }
+            const ci = answersCache[id];
+            if (ci === undefined || ci === null) { alert('No correct answer recorded for this question.'); return; }
+            update(ref(db, path), { open: false, revealed: true, revealedCorrect: ci }).catch(e => alert(e.message));
+        }
+
+        window.toggleBars = function(id) {
+            if (!currentUser || !currentTerm) return;
+            const cur = !!(questionsCache[id] && questionsCache[id].showRound1Bars);
+            set(ref(db, `terms/${currentTerm}/questions/${id}/showRound1Bars`), !cur).catch(e => alert(e.message));
+        };
+
+        // ---------- Responses (live count for active question) ----------
+        function subscribeResponses(id) {
+            if (id === respSubId) return;
+            if (unsubResp) { unsubResp(); unsubResp = null; }
+            respSubId = id; respCounts = {};
+            if (!id || !currentTerm) { renderActive(); return; }
+            unsubResp = onValue(ref(db, `terms/${currentTerm}/responses/${id}`), (snap) => {
+                const v = snap.val() || {};
+                respCounts = {};
+                Object.keys(v).forEach(roundKey => {
+                    respCounts[roundKey] = Object.keys(v[roundKey] || {}).length;
+                });
+                renderActive();
+            });
+        }
+
+        // ---------- Render ----------
+        function renderAll() {
+            subscribeResponses(activeId());
+            renderList();
+            renderActive();
+        }
+
+        function statusOf(id) {
+            const q = questionsCache[id];
+            if (q.active) {
+                if (isRevealed(q)) return 'revealed';
+                return q.open ? 'live' : 'discuss';
+            }
+            return isRevealed(q) ? 'done' : 'queued';
+        }
+
+        function renderList() {
+            const wrap = document.getElementById('questionsList');
+            const ids = Object.keys(questionsCache).sort((a, b) => {
+                const la = questionsCache[a].lecture || '', lb = questionsCache[b].lecture || '';
+                if (la !== lb) return la < lb ? -1 : 1;
+                return (questionsCache[a].createdAt || 0) - (questionsCache[b].createdAt || 0);
+            });
+            if (ids.length === 0) { wrap.innerHTML = '<p class="muted">No questions yet.</p>'; return; }
+            let html = '';
+            ids.forEach(id => {
+                const q = questionsCache[id];
+                const st = statusOf(id);
+                const bc = q.type === 'retrieval' ? '#1d9e75' : (q.type === 'poll' ? '#d97706' : '#51247A');
+                const bl = q.type === 'retrieval' ? 'R' : (q.type === 'poll' ? 'P' : 'C');
+                html += `<button class="qrow ${q.active ? 'act' : ''}" onclick="activateQuestion('${id}')">
+                    <span class="bdg" style="background:${bc};">${bl}</span>
+                    <span class="qtxt">${escHtml(q.text || '')}<div class="qlec">${escHtml(q.lecture || 'Unfiled')}</div></span>
+                    <span class="pill ${st}">${st}</span>
+                </button>`;
+            });
+            wrap.innerHTML = html;
+        }
+
+        function projText(q) {
+            if (!resultsVisible || !q) return 'join screen (QR)';
+            if (isRevealed(q)) return q.type === 'poll' ? 'results' : 'results + flow';
+            if (q.open) return (q.round || 1) > 1 ? 're-voting' : 'question + live count';
+            const rounds = q.rounds || 1;
+            if ((q.round || 1) < rounds) return q.showRound1Bars ? 'round-1 bars (answer hidden)' : 'discussion prompt';
+            return 'ready to reveal';
+        }
+
+        function renderActive() {
+            const el = document.getElementById('activePanel');
+            const id = activeId();
+            if (!id) { el.innerHTML = '<div class="card"><p class="muted">Tap a question below to make it live.</p></div>'; return; }
+            const q = questionsCache[id];
+            const rounds = q.rounds || 1;
+            const round = q.round || 1;
+            const open = !!q.open;
+            const revealed = isRevealed(q);
+
+            const isPoll = q.type === 'poll';
+            let status, primLabel, primClass = 'prim';
+            if (revealed) { status = isPoll ? 'Results shown' : 'Answer revealed'; primLabel = 'Finish question'; primClass = 'prim finish'; }
+            else if (open) {
+                status = isPoll ? 'Collecting responses' : `Round ${round} · collecting`;
+                primLabel = (round < rounds) ? `Close round ${round}` : (isPoll ? 'Show results' : 'Reveal answer');
+            }
+            else { status = `Round ${round} closed · discussion`; primLabel = (round < rounds) ? `Open round ${round + 1}` : (isPoll ? 'Show results' : 'Reveal answer'); }
+
+            const count = respCounts['round' + round];
+            const countPill = (!revealed && count !== undefined) ? `<span class="count-pill">${count} in</span>` : '';
+
+            const barsRow = (rounds > 1) ? `<div class="bars-row">
+                <span style="font-size:13.5px; color:#444;">Show round-1 bars on screen</span>
+                <div class="sw ${q.showRound1Bars ? 'on' : ''}" onclick="toggleBars('${id}')"><span class="kn"></span></div>
+            </div>` : '';
+
+            el.innerHTML = `<div class="card">
+                <div class="label-sm">Now running</div>
+                <div style="font-size:15px; font-weight:500; line-height:1.35; margin-bottom:12px;">${escHtml(q.text || '')}</div>
+                <div class="row-between" style="margin-bottom:2px;"><span class="panel-status">${status}</span>${countPill}</div>
+                ${barsRow}
+                <div class="proj-line"><span>&#128250;</span> Projector: ${projText(q)}</div>
+                <button class="${primClass}" onclick="advance()">${primLabel}</button>
+            </div>`;
+        }
+
+        function escHtml(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+        document.getElementById('passwordInput').addEventListener('keypress', e => { if (e.key === 'Enter') login(); });
+        document.getElementById('emailInput').addEventListener('keypress', e => { if (e.key === 'Enter') login(); });
+    </script>
+</body>
+</html>
