@@ -18,6 +18,10 @@
         .join .url { margin-top: 20px; font-family: monospace; font-size: 18px; color: #51247A; word-break: break-all; }
         .qtext { font-size: 30px; font-weight: 600; color: #2b2b2b; line-height: 1.35; margin-bottom: 22px; }
         .status { font-size: 19px; color: #51247A; font-weight: 500; margin-bottom: 22px; }
+        .discuss-bar { background: #51247A; color: #fff; border-radius: 10px; padding: 26px 30px; margin-bottom: 26px; display: flex; align-items: center; gap: 22px; }
+        .discuss-bar svg { flex-shrink: 0; }
+        .discuss-bar .dh { font-size: 38px; font-weight: 600; line-height: 1.1; }
+        .discuss-bar .ds { font-size: 22px; opacity: 0.93; margin-top: 6px; }
         .opt-list { }
         .opt { display: flex; gap: 12px; font-size: 22px; color: #333; padding: 13px 18px; border: 1px solid #e6e6e6; border-radius: 8px; margin-bottom: 11px; }
         .opt .l { font-weight: 600; color: #51247A; }
@@ -167,15 +171,20 @@
         function renderLive(q) {
             const n = q.answers.length, round = q.round || 1, open = !!q.open, rounds = q.rounds || 1, showBars = !!q.showRound1Bars;
             const counts = countsForRound('round' + round, n), total = sum(counts);
-            let status;
-            if (open) status = (round > 1 ? `Round ${round} — ` : '') + `voting open · ${total} response${total === 1 ? '' : 's'}`;
-            else if (round < rounds) status = 'Discussion — vote again shortly';
-            else status = 'Voting closed';
+            const discussing = (!open && round < rounds);
             const opts = '<div class="opt-list">' + q.answers.map((ans, i) => `<div class="opt"><span class="l">${L(i)}.</span><span>${esc(ans)}</span></div>`).join('') + '</div>';
-            const showDiscussBars = (!open && round < rounds && showBars);
-            const main = showDiscussBars ? barsHtml(q.answers, countsForRound('round1', n), null, null) : opts;
+            const main = (discussing && showBars) ? barsHtml(q.answers, countsForRound('round1', n), null, null) : opts;
             document.getElementById('meta').textContent = q.type === 'poll' ? 'Poll' : '';
-            document.getElementById('content').innerHTML = `<div class="qtext">${esc(q.text)}</div><div class="status">${status}</div>${main}`;
+            const qtextHtml = `<div class="qtext">${esc(q.text)}</div>`;
+            let html;
+            if (discussing) {
+                const icon = '<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 8h7M7.5 11.5h4"/><path d="M4 5.5h11a1.5 1.5 0 0 1 1.5 1.5v6a1.5 1.5 0 0 1-1.5 1.5H9l-3.5 2.6V16H4a1.5 1.5 0 0 1-1.5-1.5V7A1.5 1.5 0 0 1 4 5.5Z"/><path d="M18.5 9.5H20a1.5 1.5 0 0 1 1.5 1.5v4a1.5 1.5 0 0 1-1.5 1.5h-1v2l-2.5-2"/></svg>';
+                html = `<div class="discuss-bar">${icon}<div><div class="dh">Talk it through</div><div class="ds">Compare with the person next to you — you'll vote again in a moment.</div></div></div>${qtextHtml}${main}`;
+            } else {
+                const status = open ? ((round > 1 ? `Round ${round} — ` : '') + `voting open · ${total} response${total === 1 ? '' : 's'}`) : 'Voting closed';
+                html = `${qtextHtml}<div class="status">${status}</div>${main}`;
+            }
+            document.getElementById('content').innerHTML = html;
         }
 
         function renderReveal(q) {
