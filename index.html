@@ -201,7 +201,7 @@
             } else {
                 // locked: either waiting (open & submitted), discussing (closed & round<rounds), or pre-reveal
                 if (open && submittedThisRound) banner = `<div class="banner">Locked in — waiting…</div>`;
-                else if (round < rounds) banner = `<div class="discuss-banner"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 8h7M7.5 11.5h4"/><path d="M4 5.5h11a1.5 1.5 0 0 1 1.5 1.5v6a1.5 1.5 0 0 1-1.5 1.5H9l-3.5 2.6V16H4a1.5 1.5 0 0 1-1.5-1.5V7A1.5 1.5 0 0 1 4 5.5Z"/><path d="M18.5 9.5H20a1.5 1.5 0 0 1 1.5 1.5v4a1.5 1.5 0 0 1-1.5 1.5h-1v2l-2.5-2"/></svg><div><div class="t">Talk it through</div><div class="s">Compare with the person next to you — you'll vote again in a moment.</div></div></div>`;
+                else if (round < rounds) banner = `<div class="discuss-banner"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 8h7M7.5 11.5h4"/><path d="M4 5.5h11a1.5 1.5 0 0 1 1.5 1.5v6a1.5 1.5 0 0 1-1.5 1.5H9l-3.5 2.6V16H4a1.5 1.5 0 0 1-1.5-1.5V7A1.5 1.5 0 0 1 4 5.5Z"/><path d="M18.5 9.5H20a1.5 1.5 0 0 1 1.5 1.5v4a1.5 1.5 0 0 1-1.5 1.5h-1v2l-2.5-2"/></svg><div><div class="t">Talk it through</div><div class="s">Compare with those around you — you'll vote again in a moment.</div></div></div>`;
                 else banner = `<div class="banner">Locked in — waiting for the answer</div>`;
                 optionsHtml = q.answers.map((ans, i) => {
                     let cls = 'answer-option disabled', tag = '';
