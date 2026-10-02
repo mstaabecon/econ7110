@@ -38,6 +38,53 @@
         .flow-title { font-size: 15px; color: #888; text-align: center; margin-top: 6px; }
         .total { text-align: center; color: #888; font-size: 16px; margin-top: 16px; }
         @media (max-width: 720px) { .reveal-grid { grid-template-columns: 1fr; } .qtext { font-size: 24px; } .opt { font-size: 19px; } }
+
+        /* ---- Number game ---- */
+        .num-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+        .num-tile { border: 1px solid #e6e6e6; border-radius: 10px; padding: 22px 28px; }
+        .num-tile .k { font-size: 22px; color: #555; }
+        .num-tile .v { font-size: 104px; font-weight: 600; line-height: 1.1; color: #2b2b2b; }
+        .num-tile.t { background: #eef7f0; border-color: #b9ddc4; }
+        .num-tile.t .k, .num-tile.t .v { color: #1f6e3d; }
+        .num-prevs { margin-bottom: 20px; }
+        .num-prev { font-size: 20px; color: #555; margin-bottom: 6px; }
+        .num-prev strong { color: #2b2b2b; }
+        .num-prev strong.t { color: #1f6e3d; }
+        .num-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 30px; align-items: start; }
+        .num-legend { display: flex; gap: 24px; align-items: center; padding-left: 150px; font-size: 15px; color: #444; margin-bottom: 12px; }
+        .num-legend span { display: inline-flex; align-items: center; gap: 8px; }
+        .num-legend i { display: inline-block; height: 18px; }
+        .num-legend i.avg { border-left: 2px dashed #444; }
+        .num-legend i.tgt { border-left: 3px solid #2e7d32; }
+        .num-row { display: flex; align-items: stretch; margin-bottom: 12px; }
+        .num-rl { width: 150px; flex-shrink: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; padding-bottom: 6px; }
+        .num-rl .r { font-size: 18px; font-weight: 600; color: #2b2b2b; }
+        .num-rl .a { font-size: 14px; color: #555; }
+        .num-rl .t { font-size: 14px; font-weight: 600; color: #1f6e3d; }
+        .num-plot { flex: 1; min-width: 0; position: relative; border-bottom: 2px solid #bdbdbd; }
+        .num-bars { position: absolute; left: 0; right: 0; top: 0; bottom: 0; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); column-gap: 1px; align-items: end; }
+        .num-bars div { background: #7b4397; border-radius: 1px 1px 0 0; }
+        .num-m { position: absolute; top: 0; bottom: 0; }
+        .num-m.avg { border-left: 2px dashed #444; margin-left: -1px; }
+        .num-m.tgt { border-left: 3px solid #2e7d32; margin-left: -1.5px; }
+        .num-axis { display: flex; }
+        .num-axis .sp { width: 150px; flex-shrink: 0; font-size: 14px; color: #555; }
+        .num-axis .tk { flex: 1; position: relative; height: 22px; }
+        .num-axis .tk span { position: absolute; top: 0; transform: translateX(-50%); font-size: 14px; color: #555; }
+        .num-win { border: 2px solid #51247A; border-radius: 10px; padding: 20px 22px; }
+        .num-win .k { font-size: 16px; font-weight: 600; color: #51247A; }
+        .num-win .g { font-size: 76px; font-weight: 700; line-height: 1; color: #51247A; margin: 10px 0 12px; }
+        .num-win p { font-size: 17px; color: #444; line-height: 1.4; margin-bottom: 12px; }
+        .num-win p:last-child { margin-bottom: 0; }
+        .num-win .code { background: #f7f4fb; border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; }
+        .num-win .ck { font-size: 14px; color: #555; }
+        .num-win .cv { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 42px; font-weight: 700; letter-spacing: 5px; line-height: 1.15; color: #51247A; }
+        @media (max-width: 720px) {
+            .num-grid { grid-template-columns: 1fr; }
+            .num-tile .v { font-size: 60px; }
+            .num-rl, .num-axis .sp { width: 96px; }
+            .num-legend { padding-left: 0; flex-wrap: wrap; }
+        }
     </style>
 </head>
 <body>
@@ -217,6 +264,143 @@
             document.getElementById('content').innerHTML = body;
         }
 
+        // ---------- Number game (guess a fraction of the class average) ----------
+        function numCfg(q) {
+            const min = Number.isInteger(q.numMin) ? q.numMin : 1;
+            const max = Number.isInteger(q.numMax) ? q.numMax : 100;
+            const factor = (typeof q.factor === 'number' && q.factor > 0) ? q.factor : 2 / 3;
+            return { min, max, factor, label: factorLabel(factor) };
+        }
+        function factorLabel(f) {
+            const known = [[2 / 3, '⅔'], [1 / 2, '½'], [3 / 4, '¾'], [1 / 3, '⅓']];
+            for (const [v, s] of known) if (Math.abs(f - v) < 1e-6) return s;
+            return String(Math.round(f * 100) / 100);
+        }
+        function f1(x) { return (Math.round(x * 10) / 10).toFixed(1); }
+        function toArr(x) { return Array.isArray(x) ? x : Object.values(x || {}); }
+        function numRoundLabel(round, rounds) {
+            if (rounds <= 1) return '';
+            return round >= rounds ? 'Final round' : `Round ${round} of ${rounds}`;
+        }
+        const plural = (n, word, many) => `${n} ${n === 1 ? word : (many || word + 's')}`;
+
+        // While a round is open: the rules and a live count. Between rounds: average and target only.
+        function renderNumberLive(q) {
+            const cfg = numCfg(q);
+            const rounds = q.roundsNow || q.rounds || 1, round = q.round || 1;
+            const stats = q.stats || {};
+            document.getElementById('meta').textContent = numRoundLabel(round, rounds);
+            const qtextHtml = `<div class="qtext">${esc(q.text || '')}</div>`;
+            const earlier = (upTo) => {
+                let h = '';
+                for (let r = 1; r <= upTo; r++) {
+                    const s = stats['round' + r];
+                    if (s && s.n) h += `<div class="num-prev">Round ${r}: average <strong>${f1(s.mean)}</strong> → target <strong class="t">${f1(s.target)}</strong></div>`;
+                }
+                return h ? `<div class="num-prevs">${h}</div>` : '';
+            };
+            let html;
+            if (q.open) {
+                const total = Object.keys(responsesCache['round' + round] || {}).length;
+                const steps = [
+                    `Enter a whole number from ${cfg.min} to ${cfg.max} on your phone.`,
+                    `We average everyone's numbers and multiply by ${cfg.label}. That is the target.`,
+                    `${rounds > 1 ? 'After the final round, the' : 'The'} guess closest to the target wins. Ties go to a random draw.`
+                ];
+                html = `${qtextHtml}<div class="status">Guessing open · ${plural(total, 'guess', 'guesses')} in</div>${earlier(round - 1)}
+                    <div class="opt-list">${steps.map((s, i) => `<div class="opt"><span class="l">${i + 1}.</span><span>${s}</span></div>`).join('')}</div>`;
+            } else {
+                const st = stats['round' + round];
+                const closedLabel = rounds > 1 ? `Round ${round} closed` : 'Guessing closed';
+                if (!st) html = `${qtextHtml}<div class="status">${closedLabel} · counting…</div>`;
+                else if (!st.n) html = `${qtextHtml}<div class="status">${closedLabel} · no guesses</div>${earlier(round - 1)}`;
+                else html = `${qtextHtml}<div class="status">${closedLabel} · ${plural(st.n, 'guess', 'guesses')}</div>
+                    <div class="num-tiles">
+                        <div class="num-tile"><div class="k">Class average</div><div class="v">${f1(st.mean)}</div></div>
+                        <div class="num-tile t"><div class="k">Target = ${cfg.label} × average</div><div class="v">${f1(st.target)}</div></div>
+                    </div>${earlier(round - 1)}`;
+            }
+            document.getElementById('content').innerHTML = html;
+        }
+
+        // Final reveal: one distribution per round on a shared axis, plus the winner.
+        function renderNumberReveal(q) {
+            const cfg = numCfg(q);
+            const stats = q.stats || {};
+            const F = q.finalRound || q.round || 1;
+            const fs = stats['round' + F] || {};
+            const w = q.winner || null;
+            document.getElementById('meta').textContent = 'Results';
+
+            const N = cfg.max - cfg.min + 1;
+            const left = (v) => ((v - cfg.min + 0.5) / N * 100).toFixed(3) + '%';
+            const rows = [];
+            let maxC = 1;
+            for (let r = 1; r <= F; r++) {
+                const s = stats['round' + r];
+                if (!s || !s.n) continue;
+                rows.push({ r, s });
+                for (let k = cfg.min; k <= cfg.max; k++) maxC = Math.max(maxC, (s.hist || [])[k] || 0);
+            }
+            const rowH = rows.length <= 1 ? 260 : (rows.length === 2 ? 150 : (rows.length === 3 ? 104 : 78));
+            const rowsHtml = rows.map(({ r, s }) => {
+                let bars = '';
+                for (let k = cfg.min; k <= cfg.max; k++) {
+                    const c = (s.hist || [])[k] || 0;
+                    bars += `<div style="height:${(c / maxC * (rowH - 4)).toFixed(1)}px"></div>`;
+                }
+                return `<div class="num-row">
+                    <div class="num-rl"><div class="r">Round ${r}</div><div class="a">average ${f1(s.mean)}</div><div class="t">target ${f1(s.target)}</div></div>
+                    <div class="num-plot" style="height:${rowH}px">
+                        <div class="num-bars" style="--n:${N}">${bars}</div>
+                        <div class="num-m avg" style="left:${left(s.mean)}"></div>
+                        <div class="num-m tgt" style="left:${left(s.target)}"></div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            const span = cfg.max - cfg.min;
+            const step = span >= 50 ? 10 : (span >= 20 ? 5 : 1);
+            const ticks = [cfg.min];
+            for (let v = Math.ceil((cfg.min + 1) / step) * step; v < cfg.max; v += step) ticks.push(v);
+            ticks.push(cfg.max);
+            const axis = `<div class="num-axis"><div class="sp">Number guessed</div><div class="tk">${ticks.map(v => `<span style="left:${left(v)}">${v}</span>`).join('')}</div></div>`;
+
+            let gain = '';
+            if (rows.length > 1) {
+                const a = rows[0], b = rows[rows.length - 1];
+                if (f1(a.s.target) === f1(b.s.target)) gain = `The target stayed at <strong>${f1(b.s.target)}</strong>.`;
+                else gain = `The target ${b.s.target < a.s.target ? 'fell' : 'rose'} from <strong>${f1(a.s.target)}</strong> in round ${a.r} to <strong>${f1(b.s.target)}</strong> in round ${b.r}.`;
+            } else if (rows.length === 1) {
+                gain = `Class average <strong>${f1(rows[0].s.mean)}</strong> × ${cfg.label} = target <strong>${f1(rows[0].s.target)}</strong>.`;
+            }
+
+            let win;
+            if (!fs.n) {
+                win = `<div class="num-win"><div class="k">Final round</div><p style="margin-top:10px;">No guesses were recorded.</p></div>`;
+            } else if (w) {
+                win = `<div class="num-win"><div class="k">Winning guess</div><div class="g">${esc(w.guess)}</div>
+                    <p>${f1(Math.abs(w.guess - w.target))} from the final target of ${f1(w.target)}</p>
+                    ${w.tied > 1 ? `<p>${esc(w.tied)} people were equally close. The winner was drawn at random.</p>` : ''}
+                    <div class="code"><div class="ck">Winner code</div><div class="cv">${esc(w.code || '')}</div></div>
+                    <p>Check your phone. The winner's screen shows this code.</p></div>`;
+            } else {
+                const closest = toArr(fs.closest);
+                win = `<div class="num-win"><div class="k">Closest guess${closest.length > 1 ? 'es' : ''}</div><div class="g">${esc(closest.join(' / '))}</div>
+                    <p>${f1(Math.abs(closest[0] - fs.target))} from the final target of ${f1(fs.target)}</p>
+                    <p>${fs.closestCount > 1 ? esc(fs.closestCount) + ' people are equally close. The winner will be drawn at random.' : 'The winner is about to be announced.'}</p></div>`;
+            }
+
+            document.getElementById('content').innerHTML = `<div class="qtext">${esc(q.text || '')}</div>
+                ${gain ? `<div class="gain">${gain}</div>` : ''}
+                <div class="num-grid">
+                    <div>
+                        ${rows.length ? `<div class="num-legend"><span><i class="avg"></i>Class average</span><span><i class="tgt"></i>Target (${cfg.label} × average)</span></div>${rowsHtml}${axis}` : ''}
+                    </div>
+                    ${win}
+                </div>`;
+        }
+
         function render() {
             const a = (!resultsVisible) ? null : activeQ();
             manageRespSub(a ? a.id : null);
@@ -228,6 +412,10 @@
                 return;
             }
             lastMode = mode;
+            if (a.q.type === 'number') {
+                if (a.q.revealed === true) renderNumberReveal(a.q); else renderNumberLive(a.q);
+                return;
+            }
             if (a.q.revealed === true) renderReveal(a.q);
             else renderLive(a.q);
         }

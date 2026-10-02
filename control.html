@@ -72,6 +72,17 @@
         .prim { width: 100%; padding: 15px; border: none; border-radius: 8px; background: #51247A; color: #fff; font-size: 16px; font-weight: 500; cursor: pointer; font-family: inherit; }
         .clear-link { background: none; border: none; color: #b03030; font-size: 13px; cursor: pointer; text-decoration: underline; font-family: inherit; padding: 6px; }
         .prim.finish { background: #555; }
+        .prim:disabled { opacity: 0.6; cursor: default; }
+        .sec { width: 100%; padding: 13px; margin-top: 10px; border: 1px solid #51247A; border-radius: 8px; background: #fff; color: #51247A; font-size: 15px; font-weight: 500; cursor: pointer; font-family: inherit; }
+        .num-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px 0; border-top: 1px solid #eee; border-bottom: 1px solid #eee; margin: 12px 0; }
+        .num-stats .k { font-size: 11.5px; color: #777; }
+        .num-stats .v { font-size: 20px; font-weight: 600; }
+        .num-stats .tg .k, .num-stats .tg .v { color: #1f6e3d; }
+        .num-winbox { background: #f7f4fb; border-radius: 8px; padding: 12px 14px; margin: 12px 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .num-winbox .k { font-size: 11.5px; color: #555; }
+        .num-winbox .v { font-size: 20px; font-weight: 600; color: #51247A; }
+        .num-winbox .s { font-size: 12.5px; color: #555; }
+        .num-winbox .code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 26px; font-weight: 700; letter-spacing: 3px; color: #51247A; }
         .muted { color: #888; font-size: 14px; text-align: center; padding: 20px 0; }
         .notice { color: #b26a00; background: #fff6e6; border: 1px solid #ffe0a3; padding: 12px 14px; border-radius: 8px; margin-bottom: 14px; }
         .hidden { display: none; }
@@ -130,7 +141,7 @@
 
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js';
-        import { getDatabase, ref, onValue, set, update, remove } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js';
+        import { getDatabase, ref, onValue, get, set, update, remove } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js';
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js';
 
         const firebaseConfig = {
@@ -232,6 +243,17 @@
             if (!currentUser || !currentTerm) return;
             const id = activeId();
             if (!id) return;
+            if (isNum(questionsCache[id])) {
+                // A number game keeps its results on the question, so clearing also restarts it at round 1.
+                if (!confirm("Clear all guesses and restart this game at round 1? Results and any winner are deleted; the question itself stays.")) return;
+                remove(ref(db, `terms/${currentTerm}/responses/${id}`))
+                    .then(() => update(ref(db, `terms/${currentTerm}/questions/${id}`), {
+                        round: 1, open: true, revealed: null, stats: null, winner: null, finalists: null, finalRound: null, roundsNow: null, book: null,
+                        gameId: Date.now()
+                    }))
+                    .catch(e => alert('Error: ' + e.message));
+                return;
+            }
             if (!confirm("Clear all responses for this question? Its answers are deleted; the question itself stays.")) return;
             remove(ref(db, `terms/${currentTerm}/responses/${id}`)).catch(e => alert('Error: ' + e.message));
         };
@@ -247,6 +269,14 @@
                     updates[`${base}/open`] = true;
                     updates[`${base}/revealed`] = null;
                     updates[`${base}/revealedCorrect`] = null;
+                    // number game: start from a clean slate
+                    updates[`${base}/stats`] = null;
+                    updates[`${base}/winner`] = null;
+                    updates[`${base}/finalists`] = null;
+                    updates[`${base}/finalRound`] = null;
+                    updates[`${base}/roundsNow`] = null;
+                    updates[`${base}/book`] = null;
+                    if (isNum(questionsCache[qid])) updates[`${base}/gameId`] = Date.now();   // tells phones to re-check their guesses
                 } else if (questionsCache[qid].active) {
                     updates[`${base}/active`] = false;
                     updates[`${base}/open`] = false;
@@ -264,6 +294,7 @@
             const round = q.round || 1;
             const open = !!q.open;
             const path = `terms/${currentTerm}/questions/${id}`;
+            if (isNum(q)) { advanceNumber(id, q, path); return; }
             if (isRevealed(q)) { update(ref(db, path), { active: false }).catch(e => alert(e.message)); return; }
             if (open) {
                 if (round < rounds) update(ref(db, path), { open: false }).catch(e => alert(e.message));
@@ -282,6 +313,151 @@
             const ci = answersCache[id];
             if (ci === undefined || ci === null) { alert('No correct answer recorded for this question.'); return; }
             update(ref(db, path), { open: false, revealed: true, revealedCorrect: ci }).catch(e => alert(e.message));
+        }
+
+        // ---------- Number game (guess a fraction of the class average) ----------
+        let numBusy = false;
+        const SETTLE_MS = 600;   // lets guesses already on their way arrive before a round is counted
+
+        function isNum(q) { return !!q && q.type === 'number'; }
+        function numCfg(q) {
+            const min = Number.isInteger(q.numMin) ? q.numMin : 1;
+            const max = Number.isInteger(q.numMax) ? q.numMax : 100;
+            const factor = (typeof q.factor === 'number' && q.factor > 0) ? q.factor : 2 / 3;
+            return { min, max, factor };
+        }
+        function numRounds(q) { return q.roundsNow || q.rounds || 1; }
+        function f1(x) { return (Math.round(x * 10) / 10).toFixed(1); }
+        function toArr(x) { return Array.isArray(x) ? x : Object.values(x || {}); }
+        function validGuesses(resp, cfg) {
+            return Object.entries(resp || {}).filter(([, v]) => Number.isInteger(v) && v >= cfg.min && v <= cfg.max);
+        }
+        // Sessions (and their guesses) closest to the target among the given entries.
+        function closestTo(entries, target) {
+            let best = Infinity;
+            entries.forEach(([, v]) => { best = Math.min(best, Math.abs(v - target)); });
+            const near = entries.filter(([, v]) => Math.abs(Math.abs(v - target) - best) < 1e-9);
+            return { sessions: near.map(([s]) => s), guesses: [...new Set(near.map(([, v]) => v))].sort((a, b) => a - b) };
+        }
+        function computeRound(resp, cfg) {
+            const entries = validGuesses(resp, cfg);
+            const n = entries.length;
+            if (!n) return { n: 0 };
+            const mean = entries.reduce((a, [, v]) => a + v, 0) / n;
+            const target = mean * cfg.factor;
+            const c = closestTo(entries, target);
+            const hist = new Array(cfg.max + 1).fill(0);
+            entries.forEach(([, v]) => { hist[v]++; });
+            return { n, mean, target, closest: c.guesses, closestCount: c.sessions.length, hist };
+        }
+        // The guesses as they stood when a round closed. Winners are drawn from this copy only,
+        // so anything written to the database after the close cannot enter the draw.
+        function bookEntries(q, round) {
+            const b = q.book;
+            return (b && b.round === round && b.g) ? validGuesses(b.g, numCfg(q)) : [];
+        }
+        function winnerCode(s) {
+            let h = 2166136261;
+            for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+            h >>>= 0;
+            const A = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+            let out = '';
+            for (let i = 0; i < 4; i++) { out += A[h % A.length]; h = Math.floor(h / A.length); }
+            return out;
+        }
+        function randInt(n) {
+            const a = new Uint32Array(1);
+            crypto.getRandomValues(a);
+            return a[0] % n;
+        }
+        const wait = (ms) => new Promise(r => setTimeout(r, ms));
+        function numFail(e) { alert('Error: ' + e.message); }
+        function numDone() { numBusy = false; renderActive(); }
+
+        function advanceNumber(id, q, path) {
+            if (numBusy) return;
+            const rounds = numRounds(q), round = q.round || 1;
+            if (isRevealed(q)) {
+                if (q.winner || !toArr(q.finalists).length) update(ref(db, path), { active: false }).catch(numFail);
+                else drawWinner(id, q, path, false);
+                return;
+            }
+            // Open, or closed without a result (an earlier count failed): count the round.
+            if (q.open || !numStats(q, round)) { closeNumberRound(id, q, path, round, round >= rounds); return; }
+            if (round < rounds) { update(ref(db, path), { round: round + 1, open: true }).catch(numFail); return; }
+            closeNumberRound(id, q, path, round, true);
+        }
+        function numStats(q, round) { return (q.stats || {})['round' + round] || null; }
+
+        // Stop accepting guesses, then count the round and publish average, target and distribution.
+        function closeNumberRound(id, q, path, round, final) {
+            numBusy = true; renderActive();
+            const cfg = numCfg(q);
+            update(ref(db, path), { open: false })
+                .then(() => wait(SETTLE_MS))
+                .then(() => get(ref(db, `terms/${currentTerm}/responses/${id}/round${round}`)))
+                .then((snap) => {
+                    const entries = validGuesses(snap.val(), cfg);
+                    const st = computeRound(snap.val(), cfg);
+                    const upd = {};
+                    upd['stats/round' + round] = st;
+                    upd.book = entries.length ? { round, g: Object.fromEntries(entries) } : null;
+                    if (final) {
+                        const fin = st.n ? closestTo(entries, st.target).sessions : [];
+                        upd.revealed = true; upd.finalRound = round; upd.finalists = fin.length ? fin : null;
+                    }
+                    return update(ref(db, path), upd);
+                })
+                .catch(numFail).then(numDone);
+        }
+
+        window.openFinalRound = function() {
+            if (!currentUser || !currentTerm || numBusy) return;
+            const id = activeId();
+            const q = id ? questionsCache[id] : null;
+            if (!isNum(q) || q.open || isRevealed(q)) return;
+            const next = (q.round || 1) + 1;
+            update(ref(db, `terms/${currentTerm}/questions/${id}`), { roundsNow: next, round: next, open: true }).catch(numFail);
+        };
+
+        window.stopHere = function() {
+            if (!currentUser || !currentTerm || numBusy) return;
+            const id = activeId();
+            const q = id ? questionsCache[id] : null;
+            if (!isNum(q) || q.open || isRevealed(q)) return;
+            const round = q.round || 1;
+            const st = numStats(q, round) || {};
+            const fin = st.n ? closestTo(bookEntries(q, round), st.target).sessions : [];
+            update(ref(db, `terms/${currentTerm}/questions/${id}`), { revealed: true, finalRound: round, finalists: fin.length ? fin : null }).catch(numFail);
+        };
+
+        window.redrawWinner = function() {
+            if (!currentUser || !currentTerm || numBusy) return;
+            const id = activeId();
+            const q = id ? questionsCache[id] : null;
+            if (!isNum(q) || !q.winner) return;
+            if (!confirm('Draw a different winner? The current winner drops out of the draw.')) return;
+            drawWinner(id, q, `terms/${currentTerm}/questions/${id}`, true);
+        };
+
+        // Picks one of the students who were closest when the final round closed.
+        // On a redraw, earlier winners are left out; if nobody is left, the next-closest guesses are used.
+        function drawWinner(id, q, path, redraw) {
+            const F = q.finalRound || q.round || 1;
+            const st = numStats(q, F) || {};
+            const excluded = toArr(q.winner && q.winner.excluded).slice();
+            if (redraw && q.winner) excluded.push(q.winner.session);
+            const entries = bookEntries(q, F).filter(([s]) => !excluded.includes(s));
+            const guessOf = Object.fromEntries(entries);
+            let pool = toArr(q.finalists).filter(s => guessOf[s] !== undefined);
+            if (!pool.length) pool = closestTo(entries, st.target).sessions;
+            if (!pool.length) { alert('There is nobody left to draw.'); return; }
+            const pick = pool[randInt(pool.length)];
+            numBusy = true; renderActive();
+            update(ref(db, path), { winner: {
+                session: pick, guess: guessOf[pick], target: st.target, tied: pool.length,
+                code: winnerCode(pick), excluded: excluded.length ? excluded : null
+            } }).catch(numFail).then(numDone);
         }
 
         window.toggleBars = function(id) {
@@ -334,12 +510,13 @@
             ids.forEach(id => {
                 const q = questionsCache[id];
                 const st = statusOf(id);
-                const bc = q.type === 'retrieval' ? '#1d9e75' : (q.type === 'poll' ? '#d97706' : '#51247A');
-                const bl = q.type === 'retrieval' ? 'R' : (q.type === 'poll' ? 'P' : 'C');
+                const bc = q.type === 'retrieval' ? '#1d9e75' : (q.type === 'poll' ? '#d97706' : (isNum(q) ? '#1f6fb2' : '#51247A'));
+                const bl = q.type === 'retrieval' ? 'R' : (q.type === 'poll' ? 'P' : (isNum(q) ? 'N' : 'C'));
+                const stLabel = (isNum(q) && st === 'discuss') ? 'round ' + (q.round || 1) + ' result' : st;
                 html += `<button class="qrow ${q.active ? 'act' : ''}" onclick="activateQuestion('${id}')">
                     <span class="bdg" style="background:${bc};">${bl}</span>
                     <span class="qtxt">${escHtml(q.text || '')}<div class="qlec">${escHtml(q.lecture || 'Unfiled')}</div></span>
-                    <span class="pill ${st}">${st}</span>
+                    <span class="pill ${st}">${stLabel}</span>
                 </button>`;
             });
             wrap.innerHTML = html;
@@ -347,6 +524,11 @@
 
         function projText(q) {
             if (!resultsVisible || !q) return 'join screen (QR)';
+            if (isNum(q)) {
+                if (isRevealed(q)) return q.winner ? 'all rounds + winner code' : 'all rounds + winning guess';
+                if (q.open) return (q.round || 1) > 1 ? 'question + live count + earlier targets' : 'question + live count';
+                return 'average and target';
+            }
             if (isRevealed(q)) return q.type === 'poll' ? 'results' : 'results + flow';
             if (q.open) return (q.round || 1) > 1 ? 're-voting' : 'question + live count';
             const rounds = q.rounds || 1;
@@ -359,6 +541,7 @@
             const id = activeId();
             if (!id) { el.innerHTML = '<div class="card"><p class="muted">Tap a question below to make it live.</p></div>'; return; }
             const q = questionsCache[id];
+            if (isNum(q)) { renderActiveNumber(el, id, q); return; }
             const rounds = q.rounds || 1;
             const round = q.round || 1;
             const open = !!q.open;
@@ -389,6 +572,79 @@
                 <div class="proj-line"><span>&#128250;</span> Projector: ${projText(q)}</div>
                 <button class="${primClass}" onclick="advance()">${primLabel}</button>
                 <div style="text-align:center; margin-top:12px;"><button class="clear-link" onclick="clearActiveResponses()">Clear this question's responses</button></div>
+            </div>`;
+        }
+
+        function renderActiveNumber(el, id, q) {
+            const rounds = numRounds(q);
+            const round = q.round || 1;
+            const revealed = isRevealed(q);
+            const st = numStats(q, round);
+            const of = rounds > 1 ? ` of ${rounds}` : '';
+            let status, primLabel, primClass = 'prim', extra = '', middle = '', pill = '';
+
+            const statsGrid = (s) => (s && s.n) ? `<div class="num-stats">
+                    <div><div class="k">Average</div><div class="v">${f1(s.mean)}</div></div>
+                    <div class="tg"><div class="k">Target</div><div class="v">${f1(s.target)}</div></div>
+                    <div><div class="k">Closest guess</div><div class="v">${toArr(s.closest).join(', ')}</div></div>
+                </div>` : '';
+
+            if (revealed) {
+                const F = q.finalRound || round;
+                const fs = numStats(q, F) || {};
+                const finalists = toArr(q.finalists);
+                const w = q.winner;
+                if (w) {
+                    status = 'Winner drawn';
+                    middle = `<div class="num-winbox">
+                            <div><div class="k">Winning guess</div><div class="v">${escHtml(w.guess)}</div><div class="s">target ${f1(w.target)}${w.tied > 1 ? ' · ' + escHtml(w.tied) + ' tied' : ''}</div></div>
+                            <div style="text-align:right;"><div class="k">Winner code</div><div class="code">${escHtml(w.code || '')}</div></div>
+                        </div>`;
+                    primLabel = 'Finish question'; primClass = 'prim finish';
+                    extra = `<button class="sec" onclick="redrawWinner()">Draw again (winner not in the room)</button>`;
+                } else if (finalists.length) {
+                    status = 'Final results shown';
+                    middle = `<div class="num-winbox">
+                            <div><div class="k">Closest guess</div><div class="v">${toArr(fs.closest).join(', ')}</div><div class="s">final target ${f1(fs.target)}</div></div>
+                            <div style="text-align:right;"><div class="k">Equally close</div><div class="v">${finalists.length}</div></div>
+                        </div>`;
+                    primLabel = finalists.length > 1 ? 'Draw winner' : 'Announce winner';
+                } else {
+                    status = 'Final results shown · no guesses in the final round';
+                    primLabel = 'Finish question'; primClass = 'prim finish';
+                }
+            } else if (q.open) {
+                status = `Round ${round}${of} · collecting`;
+                const count = respCounts['round' + round];
+                pill = `<span class="count-pill">${count === undefined ? 0 : count} in</span>`;
+                primLabel = (round < rounds) ? `Close round ${round}` : `Close round ${round} and show final results`;
+            } else if (!st) {
+                status = `Round ${round}${of} · closed, not counted yet`;
+                primLabel = `Count round ${round}`;
+            } else {
+                status = `Round ${round}${of} · closed`;
+                pill = `<span class="count-pill">${st.n} in</span>`;
+                middle = statsGrid(st);
+                if (round < rounds) {
+                    const next = round + 1;
+                    primLabel = next >= rounds ? `Open round ${next} (final round)` : `Open round ${next}`;
+                    if (next < rounds) extra += `<button class="sec" onclick="openFinalRound()">Open round ${next} as the final round</button>`;
+                    if (st.n) extra += `<button class="sec" onclick="stopHere()">Stop here and show final results</button>`;
+                } else {
+                    primLabel = 'Show final results';
+                }
+            }
+            if (numBusy) primLabel = 'Working…';
+
+            el.innerHTML = `<div class="card">
+                <div class="label-sm">Now running</div>
+                <div style="font-size:15px; font-weight:500; line-height:1.35; margin-bottom:12px;">${escHtml(q.text || '')}</div>
+                <div class="row-between" style="margin-bottom:2px;"><span class="panel-status">${status}</span>${pill}</div>
+                ${middle}
+                <div class="proj-line"><span>&#128250;</span> Projector: ${projText(q)}</div>
+                <button class="${primClass}" onclick="advance()" ${numBusy ? 'disabled' : ''}>${primLabel}</button>
+                ${numBusy ? '' : extra}
+                <div style="text-align:center; margin-top:12px;"><button class="clear-link" onclick="clearActiveResponses()">Clear all guesses and restart this game</button></div>
             </div>`;
         }
 

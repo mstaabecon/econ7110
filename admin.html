@@ -191,10 +191,11 @@
                             <option value="concept">Concept (discussion + re-vote)</option>
                             <option value="retrieval">Retrieval (single vote)</option>
                             <option value="poll">Poll (no correct answer)</option>
+                            <option value="number">Number game (guess ⅔ of the average)</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Rounds</label>
+                        <label id="roundsLabel">Rounds</label>
                         <input type="number" id="qRounds" min="1" max="5" value="2">
                     </div>
                     <div class="form-group">
@@ -209,7 +210,12 @@
                         <option value="">Select after adding answers</option>
                     </select>
                 </div>
-                <div class="answer-inputs">
+                <div id="numberNote" class="hidden" style="background:#f7f4fb; border:1px solid #d9cde6; color:#51247A; padding:12px 14px; border-radius:6px; font-size:14px; line-height:1.5;">
+                    Students enter a whole number from 1 to 100 on their phones. The target is ⅔ of the class average.
+                    The guess closest to the target in the final round wins; ties are settled by a random draw.
+                    Rounds is the most you will play: on the Control page you can declare the final round early or stop after any round.
+                </div>
+                <div class="answer-inputs" id="answerInputs">
                     <div class="answer-input"><label>A.</label><input type="text" id="answer0" placeholder="Answer option A" onkeyup="updateCorrectAnswerOptions()"></div>
                     <div class="answer-input"><label>B.</label><input type="text" id="answer1" placeholder="Answer option B" onkeyup="updateCorrectAnswerOptions()"></div>
                     <div class="answer-input"><label>C.</label><input type="text" id="answer2" placeholder="Answer option C (optional)" onkeyup="updateCorrectAnswerOptions()"></div>
@@ -359,13 +365,21 @@
         }
 
         // ---------- Form helpers ----------
+        const NUMBER_DEFAULT_TEXT = 'Pick a number from 1 to 100. Closest to ⅔ of the average wins.';
         function applyTypeVisibility(type) {
-            document.getElementById('correctGroup').classList.toggle('hidden', type === 'poll');
+            const isNumber = (type === 'number');
+            document.getElementById('correctGroup').classList.toggle('hidden', type === 'poll' || isNumber);
             document.getElementById('showBarsRow').classList.toggle('hidden', type !== 'concept');
+            document.getElementById('answerInputs').classList.toggle('hidden', isNumber);
+            document.getElementById('numberNote').classList.toggle('hidden', !isNumber);
+            document.getElementById('roundsLabel').textContent = isNumber ? 'Rounds (maximum)' : 'Rounds';
         }
         window.onTypeChange = function() {
             const type = document.getElementById('qType').value;
-            document.getElementById('qRounds').value = (type === 'concept') ? 2 : 1;
+            document.getElementById('qRounds').value = (type === 'concept') ? 2 : (type === 'number' ? 3 : 1);
+            const textEl = document.getElementById('questionText');
+            if (type === 'number' && !textEl.value.trim()) textEl.value = NUMBER_DEFAULT_TEXT;
+            else if (type !== 'number' && textEl.value === NUMBER_DEFAULT_TEXT) textEl.value = '';
             applyTypeVisibility(type);
         };
 
@@ -421,30 +435,40 @@
             const lecture = currentLecture();
             const showRound1Bars = document.getElementById('qShowBars').checked;
             const isPoll = (type === 'poll');
+            const isNumber = (type === 'number');
+            const noCorrect = isPoll || isNumber;
             const correctVal = document.getElementById('correctAnswer').value;
 
             const answers = [];
-            for (let i = 0; i < 5; i++) {
-                const a = document.getElementById('answer' + i).value.trim();
-                if (a) answers.push(a);
+            if (!isNumber) {
+                for (let i = 0; i < 5; i++) {
+                    const a = document.getElementById('answer' + i).value.trim();
+                    if (a) answers.push(a);
+                }
             }
 
             if (!text) { alert('Enter a question.'); return; }
-            if (answers.length < 2) { alert('Provide at least 2 answer options.'); return; }
-            if (!isPoll && correctVal === '') { alert('Select the correct answer.'); return; }
+            if (!isNumber && answers.length < 2) { alert('Provide at least 2 answer options.'); return; }
+            if (!noCorrect && correctVal === '') { alert('Select the correct answer.'); return; }
             if (!rounds || rounds < 1) { alert('Rounds must be at least 1.'); return; }
             if (!lecture) { alert('Choose or name a lecture.'); return; }
-            const correctIndex = isPoll ? null : parseInt(correctVal, 10);
-            if (!isPoll && correctIndex >= answers.length) { alert('Correct answer is not one of the options.'); return; }
+            const correctIndex = noCorrect ? null : parseInt(correctVal, 10);
+            if (!noCorrect && correctIndex >= answers.length) { alert('Correct answer is not one of the options.'); return; }
+
+            // A number game has no answer options; it stores its range and multiplier instead.
+            const fields = isNumber
+                ? { text, type, rounds, lecture, answers: null, showRound1Bars: false, numMin: 1, numMax: 100, factor: 2 / 3 }
+                : { text, type, rounds, lecture, answers, showRound1Bars, numMin: null, numMax: null, factor: null };
 
             const targetId = editingId || push(ref(database, `terms/${currentTerm}/questions`)).key;
-            const answerWrite = set(ref(database, `terms/${currentTerm}/answers/${targetId}`), isPoll ? null : correctIndex);
+            const answerWrite = set(ref(database, `terms/${currentTerm}/answers/${targetId}`), correctIndex);
             let questionWrite;
             if (editingId) {
-                questionWrite = update(ref(database, `terms/${currentTerm}/questions/${editingId}`), { text, answers, type, rounds, lecture, showRound1Bars });
+                questionWrite = update(ref(database, `terms/${currentTerm}/questions/${editingId}`), fields);
             } else {
+                const created = Object.fromEntries(Object.entries(fields).filter(([, v]) => v !== null));
                 questionWrite = set(ref(database, `terms/${currentTerm}/questions/${targetId}`), {
-                    text, answers, type, rounds, lecture, showRound1Bars,
+                    ...created,
                     active: false, round: 1, open: false, createdAt: Date.now()
                 });
             }
@@ -542,18 +566,23 @@
                             const ok = idx === ci;
                             return `<span class="${ok ? 'correct-answer' : ''}">${String.fromCharCode(65 + idx)}. ${escHtml(ans)}${ok ? ' ✓' : ''}</span>`;
                         }).join(' &nbsp;|&nbsp; ');
-                        const typeLabel = q.type === 'retrieval' ? 'Retrieval' : (q.type === 'poll' ? 'Poll' : 'Concept');
+                        const isNumber = (q.type === 'number');
+                        const typeLabel = q.type === 'retrieval' ? 'Retrieval' : (q.type === 'poll' ? 'Poll' : (isNumber ? 'Number game' : 'Concept'));
                         const barsLabel = q.showRound1Bars ? 'bars: on' : 'bars: off';
+                        const roundsLabel = isNumber
+                            ? `up to ${q.rounds || 1} round${(q.rounds || 1) === 1 ? '' : 's'}`
+                            : `${q.rounds || 1} round${(q.rounds || 1) === 1 ? '' : 's'}`;
+                        const answersLine = isNumber ? 'Whole number from 1 to 100 · target = ⅔ × class average · closest in the final round wins' : answers;
                         html += `
                             <div class="question-item">
                                 <div class="question-header">
                                     <div style="flex:1;">
                                         <div class="question-text">${escHtml(q.text || '')}</div>
-                                        <div class="question-answers">${answers}</div>
+                                        <div class="question-answers">${answersLine}</div>
                                         <div class="badges">
                                             <span class="badge">${typeLabel}</span>
-                                            <span class="badge">${q.rounds || 1} round${(q.rounds || 1) === 1 ? '' : 's'}</span>
-                                            <span class="badge muted">${barsLabel}</span>
+                                            <span class="badge">${roundsLabel}</span>
+                                            ${isNumber ? '' : `<span class="badge muted">${barsLabel}</span>`}
                                         </div>
                                     </div>
                                     <div class="row-actions">

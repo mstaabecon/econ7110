@@ -47,6 +47,56 @@
         .discuss-banner svg { flex-shrink:0; }
         .discuss-banner .t { font-size:18px; font-weight:600; }
         .discuss-banner .s { font-size:14px; opacity:0.93; margin-top:2px; line-height:1.4; }
+
+        /* ---- Number game ---- */
+        .num-label { display: block; font-size: 13px; color: #666; margin-bottom: 6px; }
+        .num-input {
+            width: 100%; height: 72px; border: 2px solid #e0e0e0; border-radius: 6px; background: #fff;
+            font-family: inherit; font-size: 40px; font-weight: 600; text-align: center; color: #333;
+            outline: none; -webkit-appearance: none; appearance: none;
+        }
+        .num-input:focus { border-color: #51247A; }
+        .num-input.bad { border-color: #b03030; }
+        .num-input::placeholder { color: #b9b9b9; font-weight: 400; }
+        .num-hint { font-size: 13px; color: #666; margin-top: 8px; min-height: 18px; }
+        .num-hint.bad { color: #b03030; font-weight: 600; }
+        .num-btn { width: 100%; margin-top: 14px; }
+        .num-last { background: #f8f6fb; border: 1px solid #d9cde6; border-radius: 6px; padding: 10px 12px; font-size: 14px; line-height: 1.4; color: #51247A; margin-bottom: 14px; }
+        .num-locked { background: #51247A; color: #fff; border-radius: 6px; padding: 16px 18px; display: flex; justify-content: space-between; align-items: center; }
+        .num-locked .v { font-size: 40px; font-weight: 600; line-height: 1; }
+        .num-locked .tag { font-size: 12px; font-weight: 600; }
+        .num-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+        .num-tile { border-radius: 6px; padding: 12px 14px; border: 1px solid #d9cde6; background: #f8f6fb; color: #51247A; }
+        .num-tile.t { border-color: #b9ddc4; background: #eef7f0; color: #1f6e3d; }
+        .num-tile .k { font-size: 13px; }
+        .num-tile .v { font-size: 36px; font-weight: 600; line-height: 1.15; }
+        .num-calc { font-size: 14px; color: #555; margin-bottom: 14px; }
+        .num-line { position: relative; height: 80px; }
+        .num-line .track { position: absolute; left: 0; right: 0; top: 33px; height: 6px; background: #e3e3e3; border-radius: 3px; }
+        .num-line .in { position: absolute; left: 8px; right: 8px; top: 0; bottom: 0; }
+        .num-line .dot { position: absolute; top: 28px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; border: 2px solid #fff; }
+        .num-line .dot.t { background: #2e7d32; }
+        .num-line .dot.y { background: #51247A; }
+        .num-line .lab { position: absolute; font-size: 13px; font-weight: 600; white-space: nowrap; margin: 0 -8px; }
+        .num-line .lab.t { top: 0; color: #1f6e3d; }
+        .num-line .lab.y { top: 48px; color: #51247A; }
+        .num-line .end { position: absolute; top: 64px; font-size: 12px; color: #767676; }
+        .num-k { font-size: 13px; color: #666; }
+        .num-big { font-size: 44px; font-weight: 600; line-height: 1.1; color: #51247A; }
+        .num-sub { font-size: 14px; color: #555; line-height: 1.4; margin-top: 4px; }
+        .num-h { font-size: 16px; font-weight: 600; color: #333; margin-top: 16px; padding-top: 16px; border-top: 1px solid #eee; }
+        .num-table { width: 100%; border-collapse: collapse; font-size: 15px; margin-top: 10px; }
+        .num-table th { font-size: 12px; font-weight: 600; color: #666; padding: 0 0 8px; text-align: right; }
+        .num-table td { padding: 10px 0; border-top: 1px solid #eee; text-align: right; }
+        .num-table th:first-child, .num-table td:first-child { text-align: left; }
+        .num-table td.you { font-weight: 600; color: #51247A; }
+        .num-table td.tg { color: #1f6e3d; }
+        .win-card { background: #51247A; color: #fff; border-radius: 8px; padding: 28px 20px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.12); margin-bottom: 14px; }
+        .win-card h2 { font-size: 40px; line-height: 1.1; margin: 12px 0; }
+        .win-card p { font-size: 16px; line-height: 1.45; }
+        .win-code { background: #fff; border-radius: 8px; padding: 14px; margin: 16px 0; }
+        .win-code .k { font-size: 13px; color: #666; }
+        .win-code .v { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 48px; font-weight: 700; letter-spacing: 6px; line-height: 1.1; color: #51247A; }
     </style>
 </head>
 <body>
@@ -84,6 +134,10 @@
         let mySelection = null;
         let myAnswers = {};        // { round1: idx, round2: idx, ... } for the active question
         let unsubQuestions = null;
+        let numView = null;        // key of the number-entry form on screen (kept stable while typing)
+        let numBusy = false;       // a guess is being saved
+        let numErr = null;         // last save error shown under the number field
+        let lastGameId = null;     // changes when the lecturer restarts a number game
 
         // ---------- Data ----------
         onValue(ref(db, 'settings/currentTerm'), (snap) => {
@@ -109,7 +163,8 @@
                 Object.keys(v).forEach(roundKey => {
                     if (v[roundKey] && v[roundKey][sessionId] !== undefined) mine[roundKey] = v[roundKey][sessionId];
                 });
-                myAnswers = mine;
+                if (id !== lastActiveId) return;               // the question changed while this was loading
+                myAnswers = Object.assign(mine, myAnswers);    // keep anything locked in meanwhile
                 render();
             }).catch(() => {});
         }
@@ -139,6 +194,8 @@
 
         function render() {
             const content = document.getElementById('content');
+            const prevNumView = numView;
+            numView = null;
 
             if (!currentTerm) { content.innerHTML = '<div class="message">Waiting for the session to start…</div>'; return; }
 
@@ -148,11 +205,13 @@
                 lastRound = null;
                 mySelection = null;
                 myAnswers = {};
+                lastGameId = id ? (questionsCache[id].gameId || null) : null;
                 if (id) fetchMyAnswers(id);
             }
             if (!id) { content.innerHTML = '<div class="message">Waiting for the next question…</div>'; return; }
 
             const q = questionsCache[id];
+            if (q.type === 'number') { renderNumber(id, q, prevNumView); return; }
             const rounds = q.rounds || 1;
             const round = q.round || 1;
             const open = !!q.open;
@@ -222,6 +281,237 @@
                 if (ans['round' + r] !== undefined) return ans['round' + r];
             }
             return undefined;
+        }
+
+        // ---------- Number game (guess a fraction of the class average) ----------
+        const TROPHY = '<svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M7 6H4.5v1.5a3 3 0 0 0 3 3"/><path d="M17 6h2.5v1.5a3 3 0 0 1-3 3"/><path d="M12 14v4"/><path d="M8.5 20h7"/><path d="M10 18h4"/></svg>';
+
+        function numCfg(q) {
+            const min = Number.isInteger(q.numMin) ? q.numMin : 1;
+            const max = Number.isInteger(q.numMax) ? q.numMax : 100;
+            const factor = (typeof q.factor === 'number' && q.factor > 0) ? q.factor : 2 / 3;
+            return { min, max, factor, label: factorLabel(factor) };
+        }
+        function factorLabel(f) {
+            const known = [[2 / 3, '⅔'], [1 / 2, '½'], [3 / 4, '¾'], [1 / 3, '⅓']];
+            for (const [v, s] of known) if (Math.abs(f - v) < 1e-6) return s;
+            return String(Math.round(f * 100) / 100);
+        }
+        function f1(x) { return (Math.round(x * 10) / 10).toFixed(1); }
+        function toArr(x) { return Array.isArray(x) ? x : Object.values(x || {}); }
+        function numRoundLabel(round, rounds) {
+            if (rounds <= 1) return '';
+            return round >= rounds ? 'Final round' : `Round ${round} of ${rounds}`;
+        }
+        function parseGuess(raw, cfg) {
+            if (!/^\d+$/.test(raw)) return null;
+            const n = parseInt(raw, 10);
+            return (n >= cfg.min && n <= cfg.max) ? n : null;
+        }
+        function signedOff(guess, target) {
+            const d = guess - target;
+            const a = f1(Math.abs(d));
+            if (a === '0.0') return a;
+            return (d > 0 ? '+' : '−') + a;
+        }
+
+        function refreshNumForm() {
+            const el = document.getElementById('numInput');
+            const btn = document.getElementById('numBtn');
+            const hint = document.getElementById('numHint');
+            const id = activeId();
+            if (!el || !btn || !hint || !id) return;
+            const cfg = numCfg(questionsCache[id]);
+            const n = parseGuess(el.value, cfg);
+            const bad = el.value !== '' && n === null;
+            el.classList.toggle('bad', bad);
+            hint.classList.toggle('bad', bad || !!numErr);
+            hint.textContent = numErr ? numErr
+                : bad ? `Enter a whole number from ${cfg.min} to ${cfg.max}.`
+                : "Whole numbers only. You can't change it once it's locked.";
+            btn.disabled = (n === null) || numBusy;
+            btn.textContent = numBusy ? 'Saving…' : (n === null ? 'Lock in guess' : 'Lock in ' + n);
+        }
+
+        window.onNumInput = function(el) {
+            const id = activeId();
+            if (!id) return;
+            const cfg = numCfg(questionsCache[id]);
+            const clean = el.value.replace(/[^0-9]/g, '').slice(0, String(cfg.max).length);
+            if (clean !== el.value) el.value = clean;
+            numErr = null;
+            refreshNumForm();
+        };
+
+        window.lockNumber = function(ev) {
+            if (ev) ev.preventDefault();
+            if (numBusy) return false;
+            const id = activeId();
+            const q = id ? questionsCache[id] : null;
+            const el = document.getElementById('numInput');
+            if (!q || q.type !== 'number' || !q.open || !el) return false;
+            const n = parseGuess(el.value, numCfg(q));
+            if (n === null) return false;
+            const key = 'round' + (q.round || 1);
+            const path = `terms/${currentTerm}/responses/${id}/${key}/${sessionId}`;
+            const failMsg = "That didn't save. Check your connection and try again.";
+            numBusy = true; numErr = null; refreshNumForm();
+            set(ref(db, path), n)
+                .then(() => { if (id === lastActiveId) myAnswers[key] = n; })
+                .catch(() => get(ref(db, path)).then((snap) => {
+                    // guesses are write-once, so a refusal usually means one is already stored
+                    if (snap.exists()) { if (id === lastActiveId) myAnswers[key] = snap.val(); }
+                    else numErr = failMsg;
+                }).catch(() => { numErr = failMsg; }))
+                .then(() => { numBusy = false; render(); refreshNumForm(); });
+            return false;
+        };
+
+        function numLineHtml(cfg, target, mine) {
+            const pos = (v) => Math.max(0, Math.min(100, (v - cfg.min) / (cfg.max - cfg.min) * 100));
+            const lab = (p, cls, text) => `<div class="lab ${cls}" style="${p > 60 ? 'right:' + (100 - p) + '%' : 'left:' + p + '%'}">${text}</div>`;
+            const pt = pos(target);
+            let h = `<div class="num-line"><div class="track"></div><div class="in">${lab(pt, 't', 'Target ' + f1(target))}<div class="dot t" style="left:${pt}%"></div>`;
+            if (mine !== undefined) {
+                const pm = pos(mine);
+                h += `<div class="dot y" style="left:${pm}%"></div>${lab(pm, 'y', 'You ' + esc(mine))}`;
+            }
+            return h + `</div><div class="end" style="left:0">${cfg.min}</div><div class="end" style="right:0">${cfg.max}</div></div>`;
+        }
+
+        function numFinalHtml(q, cfg) {
+            const stats = q.stats || {};
+            const F = q.finalRound || q.round || 1;
+            const st = stats['round' + F] || {};
+            const w = q.winner || null;
+            const myFinal = myAnswers['round' + F];
+            const inFinal = toArr(q.finalists).includes(sessionId);
+
+            if (w && w.session === sessionId) {
+                return `<div class="banner">Final result</div>
+                    <div class="win-card">${TROPHY}
+                        <h2>You won!</h2>
+                        <p>Your guess of ${esc(w.guess)} wins. The final target was ${f1(w.target)}.</p>
+                        <div class="win-code"><div class="k">Winner code</div><div class="v">${esc(w.code || '')}</div></div>
+                        <p>Hold up this screen — the code matches the one on the projector.</p>
+                    </div>
+                    ${w.tied > 1 ? `<div class="wait-note" style="margin-top:0;">${esc(w.tied)} people were equally close. You were drawn at random.</div>` : ''}`;
+            }
+            if (!st.n) {
+                return `<div class="banner">Final result</div>
+                    <div class="question-card"><div class="wait-note" style="margin-top:0;">No guesses were recorded in the final round.</div></div>`;
+            }
+
+            const closest = toArr(st.closest);
+            const winGuess = w ? w.guess : closest.join(' and ');
+            let tie = '';
+            if (w) { if (w.tied > 1) tie = ` ${esc(w.tied)} people were equally close, so the winner was drawn at random.`; }
+            else if (st.closestCount > 1) tie = ` ${esc(st.closestCount)} people are equally close, so the winner will be drawn at random.`;
+
+            let rows = '';
+            for (let r = 1; r <= F; r++) {
+                const s = stats['round' + r];
+                const g = myAnswers['round' + r];
+                const has = s && s.n;
+                rows += `<tr><td>${r}</td><td class="you">${g === undefined ? '–' : esc(g)}</td><td class="tg">${has ? f1(s.target) : '–'}</td><td>${(has && g !== undefined) ? signedOff(g, s.target) : '–'}</td></tr>`;
+            }
+
+            let fb;
+            if (myFinal === undefined) fb = `<div class="wait-note">You didn't guess in the final round.</div>`;
+            else if (!w && inFinal) fb = `<div class="feedback right">You're in the running — watch the screen!</div>`;
+            else if (w && inFinal) fb = `<div class="feedback wrong">So close — you tied for closest, but the draw went to someone else.</div>`;
+            else fb = `<div class="feedback wrong">Not this time — you finished ${f1(Math.abs(myFinal - st.target))} from the target.</div>`;
+
+            return `<div class="banner">Final result</div>
+                <div class="question-card">
+                    <div class="num-k">Winning guess${(!w && closest.length > 1) ? 'es' : ''}</div>
+                    <div class="num-big">${esc(winGuess)}</div>
+                    <div class="num-sub">The final target was ${f1(st.target)}.${tie}</div>
+                    <div class="num-h">Your rounds</div>
+                    <table class="num-table">
+                        <thead><tr><th scope="col">Round</th><th scope="col">You</th><th scope="col">Target</th><th scope="col">Off by</th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                    ${fb}
+                </div>
+                <div class="wait-note">The full picture is on the screen.</div>`;
+        }
+
+        function renderNumber(id, q, prevView) {
+            const content = document.getElementById('content');
+            // The game was restarted: forget cached guesses and ask the database again.
+            const gameId = q.gameId || null;
+            if (gameId !== lastGameId) { lastGameId = gameId; myAnswers = {}; fetchMyAnswers(id); }
+            const cfg = numCfg(q);
+            const rounds = q.roundsNow || q.rounds || 1;
+            const round = q.round || 1;
+            const stats = q.stats || {};
+            const mine = myAnswers['round' + round];
+            const label = numRoundLabel(round, rounds);
+            const title = `<div class="question-title">${esc(q.text || '')}</div>`;
+
+            if (q.revealed === true) { content.innerHTML = numFinalHtml(q, cfg); return; }
+
+            // Entry: build the form once and leave it alone while the student types.
+            if (q.open && mine === undefined) {
+                const prevMine = myAnswers['round' + (round - 1)];
+                const key = [id, round, prevMine === undefined ? '' : prevMine].join(':');
+                const old = document.getElementById('numInput');
+                if (prevView === key && old) { numView = key; return; }
+                const draft = (old && prevView && prevView.indexOf(id + ':' + round + ':') === 0) ? old.value : '';
+                const last = stats['round' + (round - 1)];
+                const strip = (round > 1 && last && last.n)
+                    ? `<div class="num-last">Last round: the target was <strong>${f1(last.target)}</strong> · ${prevMine === undefined ? "you didn't guess" : 'you guessed <strong>' + esc(prevMine) + '</strong>'}</div>`
+                    : '';
+                numView = key;
+                numErr = null;
+                content.innerHTML = `<div class="banner">${label ? label + ' — enter' : 'Enter'} your guess</div>
+                    <div class="question-card">${strip}${title}
+                        <form onsubmit="return lockNumber(event)" novalidate>
+                            <label class="num-label" for="numInput">Your guess</label>
+                            <input class="num-input" id="numInput" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="${String(cfg.max).length}" autocomplete="off" enterkeyhint="done" placeholder="${cfg.min} – ${cfg.max}" oninput="onNumInput(this)">
+                            <div class="num-hint" id="numHint"></div>
+                            <button type="submit" class="submit-btn num-btn" id="numBtn" disabled>Lock in guess</button>
+                        </form>
+                    </div>`;
+                if (draft) document.getElementById('numInput').value = draft;
+                refreshNumForm();
+                return;
+            }
+
+            // Locked in, round still open.
+            if (q.open) {
+                content.innerHTML = `<div class="banner">Locked in — waiting for the round to close</div>
+                    <div class="question-card">${title}
+                        <div class="num-locked"><span class="v">${esc(mine)}</span><span class="tag">your guess</span></div>
+                        <div class="wait-note">The result will appear here and on the screen.</div>
+                    </div>`;
+                return;
+            }
+
+            // Round closed: show this round's target against the student's guess.
+            const st = stats['round' + round];
+            let body;
+            if (!st || !st.n) {
+                body = `<div class="wait-note" style="margin-top:0;">${st ? 'No guesses were recorded this round.' : 'Working out the result…'}</div>`;
+            } else {
+                let fb;
+                if (mine === undefined) fb = `<div class="wait-note">You didn't guess this round.</div>`;
+                else if (toArr(st.closest).includes(mine)) fb = `<div class="feedback right">Closest in the room this round.</div>`;
+                else {
+                    const d = mine - st.target;
+                    fb = `<div class="feedback wrong">You were ${f1(Math.abs(d))} ${d > 0 ? 'above' : 'below'} the target.</div>`;
+                }
+                body = `<div class="num-tiles">
+                        <div class="num-tile t"><div class="k">Target</div><div class="v">${f1(st.target)}</div></div>
+                        <div class="num-tile"><div class="k">Your guess</div><div class="v">${mine === undefined ? '–' : esc(mine)}</div></div>
+                    </div>
+                    <div class="num-calc">Class average ${f1(st.mean)} × ${cfg.label} = ${f1(st.target)}</div>
+                    ${numLineHtml(cfg, st.target, mine)}${fb}`;
+            }
+            content.innerHTML = `<div class="banner">${label ? label + ' — closed' : 'Round closed'}</div>
+                <div class="question-card"><div class="question-title">${rounds > 1 ? 'Round ' + round + ' result' : 'Result'}</div>${body}</div>
+                <div class="wait-note" style="margin-top:0;">${round < rounds ? 'The next round opens in a moment.' : 'Final results are coming up.'}</div>`;
         }
 
         function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
